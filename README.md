@@ -1,10 +1,15 @@
 # Laravel Flowpipe
 
-[![Tests](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/tests.yml/badge.svg)](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/tests.yml)
-[![Code Quality](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/code-quality.yml/badge.svg)](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/code-quality.yml)
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/grazulex/laravel-flowpipe.svg?style=flat-square)](https://packagist.org/packages/grazulex/laravel-flowpipe)
-[![Total Downloads](https://img.shields.io/packagist/dt/grazulex/laravel-flowpipe.svg?style=flat-square)](https://packagist.org/packages/grazulex/laravel-flowpipe)
+<div align="center">
+  <img src="logo.png" alt="Laravel Arc" width="100">
+  <p><strong>Composable, traceable and declarative Flow Pipelines for Laravel. A modern alternative to Laravel's Pipeline, with support for conditional steps, nested flows, tracing, validation, and more.</strong></p>
+  
+    [![Tests](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/tests.yml/badge.svg)](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/tests.yml)
+    [![Code Quality](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/code-quality.yml/badge.svg)](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/code-quality.yml)
+    [![Latest Version on Packagist](https://img.shields.io/packagist/v/grazulex/laravel-flowpipe.svg?style=flat-square)](https://packagist.org/packages/grazulex/laravel-flowpipe)
+    [![Total Downloads](https://img.shields.io/packagist/dt/grazulex/laravel-flowpipe.svg?style=flat-square)](https://packagist.org/packages/grazulex/laravel-flowpipe)
 
+</div>
 **Composable, traceable and declarative Flow Pipelines for Laravel.** A modern alternative to Laravel's Pipeline, with support for conditional steps, nested flows, tracing, and more.
 
 ## Features
