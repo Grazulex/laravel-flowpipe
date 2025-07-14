@@ -69,7 +69,7 @@ final class Flowpipe
                     $duration = Helpers::durationMs($start);
 
                     $this->context->tracer()?->trace(
-                        Helpers::shortClassName($step),
+                        $step::class,
                         $before,
                         $result,
                         $duration
