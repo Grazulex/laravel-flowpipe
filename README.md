@@ -1,16 +1,19 @@
 # Laravel Flowpipe
 
-<div align="center">
-  <img src="logo.png" alt="Laravel Arc" width="100">
-  <p><strong>Composable, traceable and declarative Flow Pipelines for Laravel. A modern alternative to Laravel's Pipeline, with support for conditional steps, nested flows, tracing, validation, and more.</strong></p>
-  
-    [![Tests](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/tests.yml/badge.svg)](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/tests.yml)
-    [![Code Quality](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/code-quality.yml/badge.svg)](https://github.com/Grazulex/laravel-flowpipe/actions/workflows/code-quality.yml)
-    [![Latest Version on Packagist](https://img.shields.io/packagist/v/grazulex/laravel-flowpipe.svg?style=flat-square)](https://packagist.org/packages/grazulex/laravel-flowpipe)
-    [![Total Downloads](https://img.shields.io/packagist/dt/grazulex/laravel-flowpipe.svg?style=flat-square)](https://packagist.org/packages/grazulex/laravel-flowpipe)
+<p align="center">
+  <img src="logo.png" alt="Laravel Flowpipe" width="100">
+</p>
 
-</div>
-**Composable, traceable and declarative Flow Pipelines for Laravel.** A modern alternative to Laravel's Pipeline, with support for conditional steps, nested flows, tracing, and more.
+<p align="center">
+  <strong>Composable, traceable and declarative Flow Pipelines for Laravel. A modern alternative to Laravel's Pipeline, with support for conditional steps, nested flows, tracing, validation, and more.</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Grazulex/laravel-flowpipe/actions/workflows/tests.yml"><img src="https://github.com/Grazulex/laravel-flowpipe/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+  <a href="https://github.com/Grazulex/laravel-flowpipe/actions/workflows/code-quality.yml"><img src="https://github.com/Grazulex/laravel-flowpipe/actions/workflows/code-quality.yml/badge.svg" alt="Code Quality"></a>
+  <a href="https://packagist.org/packages/grazulex/laravel-flowpipe"><img src="https://img.shields.io/packagist/v/grazulex/laravel-flowpipe.svg?style=flat-square" alt="Latest Version on Packagist"></a>
+  <a href="https://packagist.org/packages/grazulex/laravel-flowpipe"><img src="https://img.shields.io/packagist/dt/grazulex/laravel-flowpipe.svg?style=flat-square" alt="Total Downloads"></a>
+</p>
 
 ## Features
 
