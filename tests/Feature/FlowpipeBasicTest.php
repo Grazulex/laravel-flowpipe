@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+use Grazulex\LaravelFlowpipe\Flowpipe;
+use Grazulex\LaravelFlowpipe\Steps\ClosureStep;
+use Grazulex\LaravelFlowpipe\Tracer\BasicTracer;
+
+it('can process a simple pipeline with closure steps', function () {
+    $result = Flowpipe::make()
+        ->send('Hello')
+        ->through([
+            fn ($payload, $next) => $next($payload.' world'),
+            ClosureStep::make(fn ($payload, $next) => $next(mb_strtoupper($payload))),
+        ])
+        ->withTracer(new BasicTracer())
+        ->thenReturn();
+
+    expect($result)->toBe('HELLO WORLD');
+});

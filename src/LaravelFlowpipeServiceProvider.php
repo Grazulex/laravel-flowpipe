@@ -13,8 +13,9 @@ final class LaravelFlowpipeServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
-
+        $this->publishes([
+            __DIR__.'/Config/flowpipe.php' => config_path('dto.php'),
+        ], 'flowpipe-config');
     }
 
     /**
@@ -22,6 +23,6 @@ final class LaravelFlowpipeServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->mergeConfigFrom(__DIR__.'/Config/flowpipe.php', 'flowpipe');
     }
 }
