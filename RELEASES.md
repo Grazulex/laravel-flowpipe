@@ -1,6 +1,6 @@
 # Scripts de Release
 
-Ce dossier contient des scripts pour gérer les releases du package Laravel Arc.
+Ce dossier contient des scripts pour gérer les releases du package Laravel Flowpipe.
 
 ## Scripts disponibles
 

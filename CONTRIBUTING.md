@@ -1,6 +1,6 @@
-# Contributing to Laravel Arc
+# Contributing to Laravel Flowpipe
 
-Thank you for your interest in contributing to Laravel Arc! We welcome contributions from the community to help make this package even better.
+Thank you for your interest in contributing to Laravel Flowpipe! We welcome contributions from the community to help make this package even better.
 
 ## Code of Conduct
 
@@ -76,4 +76,4 @@ If you have questions about contributing, feel free to:
 - Reach out to the maintainers
 - Check existing issues for similar questions
 
-Thank you for helping make Laravel Arc better!
+Thank you for helping make Laravel Flowpipe better!

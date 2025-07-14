@@ -22,7 +22,7 @@ print_message() {
 
 # Fonction pour afficher l'aide
 show_help() {
-    print_message $BLUE "📚 Script de mise à jour de documentation Laravel Arc"
+    print_message $BLUE "📚 Script de mise à jour de documentation Laravel Flowpipe"
     echo
     print_message $YELLOW "Usage:"
     echo "  $0 [type] [description]"
