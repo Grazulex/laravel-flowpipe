@@ -24,5 +24,8 @@ final class LaravelFlowpipeServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/Config/flowpipe.php', 'flowpipe');
+        $this->commands([
+            Console\Commands\FlowpipeMakeStepCommand::class,
+        ]);
     }
 }

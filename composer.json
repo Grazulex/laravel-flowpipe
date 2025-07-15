@@ -22,7 +22,8 @@
         "php": "^8.3",
         "illuminate/support": "^12.19",
         "nesbot/carbon": "^3.10",
-        "illuminate/contracts": "^12.0"
+        "illuminate/contracts": "^12.0",
+        "symfony/yaml": "^7.3"
     },
     "require-dev": {
         "laravel/pint": "^1.22",

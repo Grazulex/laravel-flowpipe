@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+use Closure;
+use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
+
+final class {{ class }} implements FlowStep
+{
+    public function handle(mixed $payload, Closure $next): mixed
+    {
+        // TODO: Add your logic here
+
+        return $next($payload);
+    }
+}
