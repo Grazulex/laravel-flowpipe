@@ -26,3 +26,55 @@ it('traces all executed steps in order', function () {
     ]);
     expect($tracer->firstStep())->toBe('Grazulex\\LaravelFlowpipe\\Steps\\ClosureStep');
 });
+
+it('returns empty arrays and null when no traces exist', function () {
+    $tracer = new TestTracer();
+
+    expect($tracer->count())->toBe(0);
+    expect($tracer->all())->toBeEmpty();
+    expect($tracer->steps())->toBeEmpty();
+    expect($tracer->firstStep())->toBeNull();
+    expect($tracer->lastStep())->toBeNull();
+});
+
+it('can get the last step', function () {
+    $tracer = new TestTracer();
+
+    $tracer->trace('Step1', 'before1', 'after1', 10.0);
+    $tracer->trace('Step2', 'before2', 'after2', 20.0);
+    $tracer->trace('Step3', 'before3', 'after3', 30.0);
+
+    expect($tracer->lastStep())->toBe('Step3');
+    expect($tracer->firstStep())->toBe('Step1');
+});
+
+it('can get all trace details', function () {
+    $tracer = new TestTracer();
+
+    $tracer->trace('TestStep', 'input', 'output', 15.5);
+
+    $all = $tracer->all();
+    expect($all)->toHaveCount(1);
+    expect($all[0])->toMatchArray([
+        'step' => 'TestStep',
+        'before' => 'input',
+        'after' => 'output',
+        'duration' => 15.5,
+    ]);
+});
+
+it('can clear all traces', function () {
+    $tracer = new TestTracer();
+
+    $tracer->trace('Step1', 'before', 'after', 10.0);
+    $tracer->trace('Step2', 'before', 'after', 20.0);
+
+    expect($tracer->count())->toBe(2);
+
+    $tracer->clear();
+
+    expect($tracer->count())->toBe(0);
+    expect($tracer->all())->toBeEmpty();
+    expect($tracer->firstStep())->toBeNull();
+    expect($tracer->lastStep())->toBeNull();
+});
