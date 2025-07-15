@@ -1,0 +1,21 @@
+# Flow: {{ flowName }}
+# Description: {{ description }}
+# Created: {{ date }}
+
+flow: {{ flowName }}
+description: {{ description }}
+
+# Optional: Initial payload to send to the flow
+# send: "initial data"
+
+steps:
+  # Example: Simple closure step
+  - type: closure
+    action: uppercase
+    
+  # Example: Custom step class
+  # - step: App\Flowpipe\Steps\YourCustomStep
+    
+  # Example: Another closure step
+  - type: closure
+    action: trim

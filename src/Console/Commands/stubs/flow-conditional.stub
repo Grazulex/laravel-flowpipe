@@ -1,0 +1,30 @@
+# Flow: {{ flowName }}
+# Description: {{ description }}
+# Created: {{ date }}
+
+flow: {{ flowName }}
+description: {{ description }}
+
+# Optional: Initial payload
+# send: {"active": true, "name": "John Doe"}
+
+steps:
+  # Example: Conditional step with dot notation
+  - condition: user.is_active
+    then:
+      - type: closure
+        action: uppercase
+      # - step: App\Flowpipe\Steps\SendWelcomeEmailStep
+    else:
+      - type: closure
+        action: lowercase
+      # - step: App\Flowpipe\Steps\SendRejectionEmailStep
+
+  # Example: Field-based condition
+  - condition:
+      field: status
+      operator: equals
+      value: "approved"
+    then:
+      - type: closure
+        action: trim
