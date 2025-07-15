@@ -68,8 +68,10 @@ final class Flowpipe
 
                     $duration = Helpers::durationMs($start);
 
+                    $stepClass = $step instanceof Closure ? 'Closure' : $step::class;
+
                     $this->context->tracer()?->trace(
-                        $step::class,
+                        $stepClass,
                         $before,
                         $result,
                         $duration

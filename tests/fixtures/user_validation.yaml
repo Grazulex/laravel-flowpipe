@@ -1,0 +1,25 @@
+flow: user_validation
+description: User validation flow with complex conditions
+
+steps:
+  - condition:
+      field: email
+      operator: contains
+      value: "@"
+    then:
+      - condition:
+          field: age
+          operator: greater_than
+          value: 18
+        then:
+          - type: closure
+            action: append
+            value: " - Valid adult user"
+        else:
+          - type: closure
+            action: append
+            value: " - Valid minor user"
+    else:
+      - type: closure
+        action: append
+        value: " - Invalid email"

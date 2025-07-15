@@ -1,0 +1,40 @@
+flow: hybrid_processing_flow
+description: Hybrid flow mixing step classes and closure actions
+
+send: '{"user": {"name": "Alice", "email": "alice@example.com", "is_active": true, "role": "admin"}, "action": "registration"}'
+
+steps:
+  # Validation step using a class
+  - step: Tests\Stubs\CheckUserValidityStep
+
+  # Complex condition with dot notation
+  - condition: user.is_active
+    then:
+      flow:
+        name: ActiveUserFlow
+        steps:
+          # Role-based branching
+          - condition:
+              field: user.role
+              operator: equals
+              value: "admin"
+            then:
+              - type: closure
+                action: append
+                value: " - Admin user processed"
+              - step: Tests\Stubs\SendWelcomeEmailStep
+            else:
+              - type: closure
+                action: append
+                value: " - Regular user processed"
+          
+          # Always add to CRM for active users
+          - step: Tests\Stubs\AddToCrmStep
+    else:
+      # Inactive user handling
+      - type: closure
+        action: append
+        value: " - Inactive user, no processing needed"
+
+  # Final logging step
+  - step: Tests\Stubs\LogSuccessStep

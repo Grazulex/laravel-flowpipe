@@ -1,0 +1,17 @@
+flow: text_processor
+description: A simple text processing flow
+
+steps:
+  - type: closure
+    action: trim
+  - type: closure
+    action: uppercase
+  - condition: is_not_empty
+    then:
+      - type: closure
+        action: prepend
+        value: "Processed: "
+    else:
+      - type: closure
+        action: append
+        value: " (empty)"

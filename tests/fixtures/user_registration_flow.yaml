@@ -1,0 +1,19 @@
+flow: ProcessUserRegistrationFlow
+description: >
+  Vérifie la validité de l'utilisateur et, s'il est actif,
+  lui envoie un email de bienvenue et l'ajoute au CRM.
+
+send: '{"name": "John Doe", "email": "john@example.com", "is_active": true}'
+
+steps:
+  - step: CheckUserValidityStep
+
+  - condition: user.is_active
+    then:
+      flow:
+        name: NotifyAndSyncUserFlow
+        steps:
+          - step: SendWelcomeEmailStep
+          - step: AddToCrmStep
+
+  - step: LogSuccessStep

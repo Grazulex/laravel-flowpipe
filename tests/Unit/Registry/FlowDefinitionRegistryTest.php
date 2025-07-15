@@ -22,7 +22,7 @@ it('can list yaml files in the flow definitions directory', function () {
     // Create test YAML files
     File::put($this->testDir.'/test_flow1.yaml', "name: test_flow1\nsteps: []");
     File::put($this->testDir.'/test_flow2.yaml', "name: test_flow2\nsteps: []");
-    File::put($this->testDir.'/not_a_flow.txt', "This should be ignored");
+    File::put($this->testDir.'/not_a_flow.txt', 'This should be ignored');
 
     $registry = new FlowDefinitionRegistry($this->testDir);
     $flows = $registry->list();
@@ -44,11 +44,11 @@ it('can get a specific flow definition', function () {
         'name' => 'test_flow',
         'steps' => [
             ['type' => 'closure', 'action' => 'transform'],
-            ['type' => 'conditional', 'condition' => 'check_something']
-        ]
+            ['type' => 'conditional', 'condition' => 'check_something'],
+        ],
     ];
 
-    File::put($this->testDir.'/test_flow.yaml', \Symfony\Component\Yaml\Yaml::dump($flowContent));
+    File::put($this->testDir.'/test_flow.yaml', Symfony\Component\Yaml\Yaml::dump($flowContent));
 
     $registry = new FlowDefinitionRegistry($this->testDir);
     $definition = $registry->get('test_flow');
@@ -60,7 +60,7 @@ it('throws exception when flow definition does not exist', function () {
     $registry = new FlowDefinitionRegistry($this->testDir);
 
     expect(fn () => $registry->get('non_existent_flow'))
-        ->toThrow(\RuntimeException::class, 'Flow definition [non_existent_flow] not found.');
+        ->toThrow(RuntimeException::class, 'Flow definition [non_existent_flow] not found.');
 });
 
 it('uses default path from config when no path is provided', function () {
@@ -83,24 +83,24 @@ it('can handle complex yaml structures', function () {
                 'condition' => [
                     'field' => 'status',
                     'operator' => 'equals',
-                    'value' => 'active'
+                    'value' => 'active',
                 ],
                 'then' => [
                     ['type' => 'closure', 'action' => 'process_active'],
-                    ['type' => 'closure', 'action' => 'send_notification']
+                    ['type' => 'closure', 'action' => 'send_notification'],
                 ],
                 'else' => [
-                    ['type' => 'closure', 'action' => 'process_inactive']
-                ]
-            ]
+                    ['type' => 'closure', 'action' => 'process_inactive'],
+                ],
+            ],
         ],
         'metadata' => [
             'version' => '1.0',
-            'author' => 'Test Author'
-        ]
+            'author' => 'Test Author',
+        ],
     ];
 
-    File::put($this->testDir.'/complex_flow.yaml', \Symfony\Component\Yaml\Yaml::dump($complexFlow));
+    File::put($this->testDir.'/complex_flow.yaml', Symfony\Component\Yaml\Yaml::dump($complexFlow));
 
     $registry = new FlowDefinitionRegistry($this->testDir);
     $definition = $registry->get('complex_flow');

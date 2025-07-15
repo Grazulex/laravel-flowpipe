@@ -1,0 +1,26 @@
+flow: modern_user_flow
+description: Modern user processing flow using step classes and dot notation
+
+send: '{"name": "John Doe", "email": "john@example.com", "is_active": true, "age": 25}'
+
+steps:
+  - step: Tests\Stubs\CheckUserValidityStep
+
+  - condition: is_active
+    then:
+      flow:
+        name: ProcessActiveUserFlow
+        steps:
+          - step: Tests\Stubs\SendWelcomeEmailStep
+          - condition:
+              field: age
+              operator: greater_than
+              value: 18
+            then:
+              - step: Tests\Stubs\AddToCrmStep
+    else:
+      - type: closure
+        action: append
+        value: " - User is inactive"
+
+  - step: Tests\Stubs\LogSuccessStep
