@@ -14,14 +14,14 @@ final class StepResolver
     /**
      * Resolve a given step into a FlowStep instance or Closure.
      */
-    public static function resolve(FlowStep|Closure|string $step): FlowStep|Closure
+    public static function resolve(mixed $step): FlowStep|Closure
     {
-        // Already a usable instance
-        if ($step instanceof Closure || $step instanceof FlowStep) {
+        // Step is already an instance or closure
+        if ($step instanceof FlowStep || $step instanceof Closure) {
             return $step;
         }
 
-        // Try resolving by class name or configured namespace
+        // Step is a string → resolve class
         if (is_string($step)) {
             $class = class_exists($step)
                 ? $step
@@ -40,6 +40,7 @@ final class StepResolver
             return $instance;
         }
 
+        // Step is invalid
         throw new InvalidArgumentException('Invalid step type: '.gettype($step));
     }
 }

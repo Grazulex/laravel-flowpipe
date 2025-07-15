@@ -15,14 +15,14 @@ final class FlowDefinitionRegistry
 
     public function __construct(?string $path = null)
     {
-        $this->path = base_path(config('flowpipe.definitions_path', 'flow_definitions'));
+        $this->path = $path ?? base_path(config('flowpipe.definitions_path', 'flow_definitions'));
     }
 
     public function list(): Collection
     {
         return collect(File::files($this->path))
-            ->filter(fn ($f) => str_ends_with($f->getFilename(), '.yaml'))
-            ->map(fn ($f) => $f->getFilenameWithoutExtension());
+            ->filter(fn ($f): bool => str_ends_with($f->getFilename(), '.yaml'))
+            ->map(fn ($f): string => $f->getFilenameWithoutExtension());
     }
 
     public function get(string $name): array
