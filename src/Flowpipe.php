@@ -147,6 +147,67 @@ final class Flowpipe
         return $this;
     }
 
+    public function withErrorHandler(ErrorHandling\ErrorHandlerStrategy $strategy, int $maxAttempts = 3): self
+    {
+        $this->steps[] = new Steps\ErrorHandlerStep($strategy, $maxAttempts);
+
+        return $this;
+    }
+
+    public function withRetryStrategy(ErrorHandling\Strategies\RetryStrategy $strategy): self
+    {
+        return $this->withErrorHandler($strategy);
+    }
+
+    public function withFallback(Closure $fallbackHandler, ?Closure $shouldFallback = null): self
+    {
+        $strategy = ErrorHandling\Strategies\FallbackStrategy::make($fallbackHandler, $shouldFallback);
+
+        return $this->withErrorHandler($strategy);
+    }
+
+    public function withCompensation(Closure $compensationHandler, ?Closure $shouldCompensate = null): self
+    {
+        $strategy = ErrorHandling\Strategies\CompensationStrategy::make($compensationHandler, $shouldCompensate);
+
+        return $this->withErrorHandler($strategy);
+    }
+
+    public function withCompositeErrorHandler(array $strategies = []): self
+    {
+        $strategy = ErrorHandling\Strategies\CompositeStrategy::make($strategies);
+
+        return $this->withErrorHandler($strategy);
+    }
+
+    public function exponentialBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, float $multiplier = 2.0, ?Closure $shouldRetry = null): self
+    {
+        $strategy = ErrorHandling\Strategies\RetryStrategy::exponentialBackoff($maxAttempts, $baseDelayMs, $multiplier, $shouldRetry);
+
+        return $this->withErrorHandler($strategy);
+    }
+
+    public function linearBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, int $increment = 100, ?Closure $shouldRetry = null): self
+    {
+        $strategy = ErrorHandling\Strategies\RetryStrategy::linearBackoff($maxAttempts, $baseDelayMs, $increment, $shouldRetry);
+
+        return $this->withErrorHandler($strategy);
+    }
+
+    public function fallbackOnException(string $exceptionClass, Closure $fallbackHandler): self
+    {
+        $strategy = ErrorHandling\Strategies\FallbackStrategy::forException($exceptionClass, $fallbackHandler);
+
+        return $this->withErrorHandler($strategy);
+    }
+
+    public function compensateOnException(string $exceptionClass, Closure $compensationHandler): self
+    {
+        $strategy = ErrorHandling\Strategies\CompensationStrategy::forException($exceptionClass, $compensationHandler);
+
+        return $this->withErrorHandler($strategy);
+    }
+
     public function rateLimit(string $key, int $maxAttempts = 60, int $decayMinutes = 1, ?Closure $keyGenerator = null): self
     {
         $this->steps[] = new Steps\RateLimitStep($key, $maxAttempts, $decayMinutes, $keyGenerator);
