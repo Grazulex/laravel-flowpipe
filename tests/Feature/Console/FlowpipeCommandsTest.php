@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 
 uses(RefreshDatabase::class);
 
@@ -32,7 +33,7 @@ function cleanupTestFlow(string $flowsPath, string $flowName): void
 
 beforeEach(function () {
     // Use existing fixtures directory for testing
-    $this->testFlowsPath = '/home/jean-marc-strauven/Dev/laravel-flowpipe/tests/fixtures';
+    $this->testFlowsPath = __DIR__.'/../../fixtures/flows';
 
     // Configure the test path
     config(['flowpipe.definitions_path' => $this->testFlowsPath]);

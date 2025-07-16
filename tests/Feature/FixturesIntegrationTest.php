@@ -6,7 +6,7 @@ use Grazulex\LaravelFlowpipe\Registry\FlowDefinitionRegistry;
 use Grazulex\LaravelFlowpipe\Support\FlowBuilder;
 
 it('can execute the modern user flow fixture', function () {
-    $fixturesPath = __DIR__.'/../fixtures';
+    $fixturesPath = __DIR__.'/../fixtures/flows';
 
     $registry = new FlowDefinitionRegistry($fixturesPath);
     $definition = $registry->get('modern_user_flow');
@@ -24,7 +24,7 @@ it('can execute the modern user flow fixture', function () {
 });
 
 it('can execute the hybrid processing flow fixture', function () {
-    $fixturesPath = __DIR__.'/../fixtures';
+    $fixturesPath = __DIR__.'/../fixtures/flows';
 
     $registry = new FlowDefinitionRegistry($fixturesPath);
     $definition = $registry->get('hybrid_processing_flow');
@@ -42,7 +42,7 @@ it('can execute the hybrid processing flow fixture', function () {
 });
 
 it('can execute the updated text processor fixture', function () {
-    $fixturesPath = __DIR__.'/../fixtures';
+    $fixturesPath = __DIR__.'/../fixtures/flows';
 
     $registry = new FlowDefinitionRegistry($fixturesPath);
     $definition = $registry->get('text_processor');
@@ -56,7 +56,7 @@ it('can execute the updated text processor fixture', function () {
 });
 
 it('can execute the updated user validation fixture', function () {
-    $fixturesPath = __DIR__.'/../fixtures';
+    $fixturesPath = __DIR__.'/../fixtures/flows';
 
     $registry = new FlowDefinitionRegistry($fixturesPath);
     $definition = $registry->get('user_validation');

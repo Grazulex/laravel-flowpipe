@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Fixtures\Groups;
+namespace Tests\Fixtures\Classes\Groups;
 
 use Closure;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;

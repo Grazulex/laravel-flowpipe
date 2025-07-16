@@ -81,7 +81,16 @@ final class FlowpipeExportCommand extends Command
     {
         $mermaid = "flowchart TD\n";
         $title = $type === 'group' ? "Group: {$flowName}" : "Flow: {$flowName}";
-        $mermaid .= "    Start([Start: {$title}])\n";
+
+        // Style definitions for better visuals
+        $mermaid .= "    classDef groupStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px\n";
+        $mermaid .= "    classDef stepStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px\n";
+        $mermaid .= "    classDef conditionalStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px\n";
+        $mermaid .= "    classDef startEndStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px\n";
+        $mermaid .= "\n";
+
+        $mermaid .= "    Start([🚀 Start: {$title}])\n";
+        $mermaid .= "    Start:::startEndStyle\n";
 
         $previousNode = 'Start';
 
@@ -93,50 +102,114 @@ final class FlowpipeExportCommand extends Command
                 $stepCounter++;
 
                 if (isset($step['condition'])) {
-                    // Conditional step
+                    // Conditional step with visual styling
                     $condition = is_array($step['condition'])
-                        ? json_encode($step['condition'])
+                        ? $this->formatConditionForMermaid($step['condition'])
                         : $step['condition'];
 
-                    $mermaid .= "    {$currentNode}{{\"Condition: {$condition}\"}}\n";
+                    $mermaid .= "    {$currentNode}{{\"❓ Condition:\\n{$condition}\"}}\n";
+                    $mermaid .= "    {$currentNode}:::conditionalStyle\n";
                     $mermaid .= "    {$previousNode} --> {$currentNode}\n";
 
                     if (isset($step['then'])) {
                         $thenNode = "Then{$stepCounter}";
                         $stepCounter++;
-                        $mermaid .= "    {$thenNode}[\"Then: Execute steps\"]\n";
-                        $mermaid .= "    {$currentNode} -->|Yes| {$thenNode}\n";
+                        $mermaid .= "    {$thenNode}[\"✅ Then: Execute steps\"]\n";
+                        $mermaid .= "    {$thenNode}:::stepStyle\n";
+                        $mermaid .= "    {$currentNode} -->|✅ Yes| {$thenNode}\n";
                         $previousNode = $thenNode;
                     }
 
                     if (isset($step['else'])) {
                         $elseNode = "Else{$stepCounter}";
                         $stepCounter++;
-                        $mermaid .= "    {$elseNode}[\"Else: Execute steps\"]\n";
-                        $mermaid .= "    {$currentNode} -->|No| {$elseNode}\n";
+                        $mermaid .= "    {$elseNode}[\"❌ Else: Execute steps\"]\n";
+                        $mermaid .= "    {$elseNode}:::stepStyle\n";
+                        $mermaid .= "    {$currentNode} -->|❌ No| {$elseNode}\n";
                     }
                 } elseif (isset($step['type'])) {
-                    // Regular step
+                    // Regular step with type-specific icons
                     $stepType = $step['type'];
                     $action = $step['action'] ?? 'process';
+                    $icon = $this->getStepIcon($stepType);
 
-                    $mermaid .= "    {$currentNode}[\"Type: {$stepType}\\nAction: {$action}\"]\n";
+                    if ($stepType === 'group') {
+                        $groupName = $step['name'] ?? 'unknown';
+                        $mermaid .= "    {$currentNode}[\"📦 Group: {$groupName}\"]\n";
+                        $mermaid .= "    {$currentNode}:::groupStyle\n";
+                    } else {
+                        $mermaid .= "    {$currentNode}[\"{$icon} {$stepType}:\\n{$action}\"]\n";
+                        $mermaid .= "    {$currentNode}:::stepStyle\n";
+                    }
+
                     $mermaid .= "    {$previousNode} --> {$currentNode}\n";
                     $previousNode = $currentNode;
                 } elseif (isset($step['step'])) {
                     // Class step
                     $stepClass = basename(str_replace('\\', '/', $step['step']));
 
-                    $mermaid .= "    {$currentNode}[\"Class: {$stepClass}\"]\n";
+                    $mermaid .= "    {$currentNode}[\"🔧 Class:\\n{$stepClass}\"]\n";
+                    $mermaid .= "    {$currentNode}:::stepStyle\n";
+                    $mermaid .= "    {$previousNode} --> {$currentNode}\n";
+                    $previousNode = $currentNode;
+                } elseif (isset($step['class'])) {
+                    // Alternative class step format
+                    $stepClass = basename(str_replace('\\', '/', $step['class']));
+
+                    $mermaid .= "    {$currentNode}[\"🔧 Class:\\n{$stepClass}\"]\n";
+                    $mermaid .= "    {$currentNode}:::stepStyle\n";
                     $mermaid .= "    {$previousNode} --> {$currentNode}\n";
                     $previousNode = $currentNode;
                 }
             }
         }
 
-        $mermaid .= "    End([End])\n";
+        $mermaid .= "    End([🏁 End])\n";
+        $mermaid .= "    End:::startEndStyle\n";
 
         return $mermaid."    {$previousNode} --> End\n";
+    }
+
+    private function getStepIcon(string $stepType): string
+    {
+        return match ($stepType) {
+            'closure' => '⚡',
+            'conditional' => '❓',
+            'class' => '🔧',
+            'step' => '🔧',
+            'group' => '📦',
+            'nested' => '🔄',
+            'transform' => '🔄',
+            'validation' => '✅',
+            'cache' => '💾',
+            'batch' => '📊',
+            'retry' => '🔄',
+            default => '⚙️'
+        };
+    }
+
+    private function formatConditionForMermaid(array $condition): string
+    {
+        if (isset($condition['field']) && isset($condition['operator']) && isset($condition['value'])) {
+            $field = $condition['field'];
+            $operator = $condition['operator'];
+            $value = $condition['value'];
+
+            $operatorSymbol = match ($operator) {
+                'equals' => '==',
+                'not_equals' => '!=',
+                'greater_than' => '>',
+                'less_than' => '<',
+                'contains' => 'contains',
+                'starts_with' => 'starts with',
+                'ends_with' => 'ends with',
+                default => $operator
+            };
+
+            return "{$field} {$operatorSymbol} {$value}";
+        }
+
+        return json_encode($condition);
     }
 
     private function exportToMarkdown(array $definition, string $flowName, string $type = 'flow'): string
