@@ -1,17 +1,18 @@
 #!/usr/bin/env php
 <?php
 
+declare(strict_types=1);
+
 /**
  * Test script for enhanced Mermaid export with color coding
- * 
+ *
  * This script tests the enhanced color functionality in Laravel Flowpipe
  * by creating flows with different step types and demonstrating the export.
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
 use Grazulex\LaravelFlowpipe\Flowpipe;
-use Grazulex\LaravelFlowpipe\Console\Commands\FlowpipeExportCommand;
 
 echo "=== Laravel Flowpipe Enhanced Color Test ===\n\n";
 
@@ -19,13 +20,13 @@ echo "=== Laravel Flowpipe Enhanced Color Test ===\n\n";
 echo "1. Testing basic color functionality...\n";
 
 Flowpipe::group('test-validation', [
-    fn($data, $next) => $next(array_merge($data, ['validated' => true])),
+    fn ($data, $next) => $next(array_merge($data, ['validated' => true])),
 ]);
 
 $result = Flowpipe::make()
     ->send(['name' => 'Test User'])
     ->useGroup('test-validation')
-    ->transform(fn($data) => array_merge($data, ['transformed' => true]))
+    ->transform(fn ($data) => array_merge($data, ['transformed' => true]))
     ->thenReturn();
 
 echo "   ✓ Basic flow with group and transform completed\n";
@@ -34,26 +35,26 @@ echo "   ✓ Basic flow with group and transform completed\n";
 echo "\n2. Testing complex color demonstration...\n";
 
 Flowpipe::group('complex-validation', [
-    fn($data, $next) => $next(array_merge($data, ['email_valid' => true])),
-    fn($data, $next) => $next(array_merge($data, ['name_valid' => true])),
+    fn ($data, $next) => $next(array_merge($data, ['email_valid' => true])),
+    fn ($data, $next) => $next(array_merge($data, ['name_valid' => true])),
 ]);
 
 Flowpipe::group('complex-processing', [
-    fn($data, $next) => $next(array_merge($data, ['processed' => true])),
-    fn($data, $next) => $next(array_merge($data, ['id' => uniqid()])),
+    fn ($data, $next) => $next(array_merge($data, ['processed' => true])),
+    fn ($data, $next) => $next(array_merge($data, ['id' => uniqid()])),
 ]);
 
 $complexResult = Flowpipe::make()
     ->send(['name' => 'Complex User', 'email' => 'complex@example.com'])
     ->useGroup('complex-validation')
-    ->transform(fn($data) => array_merge($data, ['name' => strtoupper($data['name'])]))
+    ->transform(fn ($data) => array_merge($data, ['name' => mb_strtoupper($data['name'])]))
     ->nested([
-        fn($data, $next) => $next(array_merge($data, ['nested_processed' => true])),
-        fn($data, $next) => $next(array_merge($data, ['nested_id' => uniqid()])),
+        fn ($data, $next) => $next(array_merge($data, ['nested_processed' => true])),
+        fn ($data, $next) => $next(array_merge($data, ['nested_id' => uniqid()])),
     ])
     ->useGroup('complex-processing')
     ->through([
-        fn($data, $next) => $next(array_merge($data, ['final_step' => true])),
+        fn ($data, $next) => $next(array_merge($data, ['final_step' => true])),
     ])
     ->thenReturn();
 
@@ -69,37 +70,43 @@ $sampleDefinition = [
     'steps' => [
         [
             'type' => 'group',
-            'name' => 'validation-group'
+            'name' => 'validation-group',
         ],
         [
             'type' => 'transform',
-            'action' => 'uppercase'
+            'action' => 'uppercase',
         ],
         [
             'type' => 'validation',
-            'action' => 'validate'
+            'action' => 'validate',
         ],
         [
             'type' => 'cache',
-            'action' => 'cache'
+            'action' => 'cache',
         ],
         [
             'type' => 'nested',
-            'action' => 'process'
+            'action' => 'process',
         ],
         [
             'type' => 'batch',
-            'action' => 'batch'
+            'action' => 'batch',
         ],
         [
             'type' => 'retry',
-            'action' => 'retry'
-        ]
-    ]
+            'action' => 'retry',
+        ],
+    ],
 ];
 
 // Create a simple export command instance for testing
-$exportCommand = new class {
+$exportCommand = new class
+{
+    public function testExport(array $definition, string $flowName): string
+    {
+        return $this->exportToMermaid($definition, $flowName);
+    }
+
     private function exportToMermaid(array $definition, string $flowName, string $type = 'flow'): string
     {
         $mermaid = "flowchart TD\n";
@@ -157,7 +164,7 @@ $exportCommand = new class {
         $mermaid .= "    End([🏁 End])\n";
         $mermaid .= "    End:::startEndStyle\n";
 
-        return $mermaid . "    {$previousNode} --> End\n";
+        return $mermaid."    {$previousNode} --> End\n";
     }
 
     private function getStepStyleClass(string $stepType): string
@@ -192,11 +199,6 @@ $exportCommand = new class {
             default => '⚙️'
         };
     }
-
-    public function testExport(array $definition, string $flowName): string
-    {
-        return $this->exportToMermaid($definition, $flowName);
-    }
 };
 
 $mermaidOutput = $exportCommand->testExport($sampleDefinition, 'test-flow');
@@ -221,7 +223,7 @@ $expectedStyles = [
 ];
 
 foreach ($expectedStyles as $style => $colors) {
-    if (strpos($mermaidOutput, $style) !== false && strpos($mermaidOutput, $colors) !== false) {
+    if (mb_strpos($mermaidOutput, $style) !== false && mb_strpos($mermaidOutput, $colors) !== false) {
         echo "   ✓ {$style} color definition found\n";
     } else {
         echo "   ✗ {$style} color definition missing\n";
