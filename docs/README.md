@@ -6,13 +6,14 @@ Welcome to the comprehensive documentation for Laravel Flowpipe - a modern, comp
 
 1. [Getting Started](#getting-started)
 2. [Core Concepts](#core-concepts)
-3. [Configuration](#configuration)
-4. [YAML Flow Definitions](#yaml-flow-definitions)
-5. [Artisan Commands](#artisan-commands)
-6. [Testing](#testing)
-7. [Advanced Usage](#advanced-usage)
-8. [Performance](#performance)
-9. [Examples](#examples)
+3. [Step Groups & Nested Flows](#step-groups--nested-flows)
+4. [Configuration](#configuration)
+5. [YAML Flow Definitions](#yaml-flow-definitions)
+6. [Artisan Commands](#artisan-commands)
+7. [Testing](#testing)
+8. [Advanced Usage](#advanced-usage)
+9. [Performance](#performance)
+10. [Examples](#examples)
 
 ## Getting Started
 
@@ -83,6 +84,94 @@ $result = Flowpipe::make()
     ->thenReturn();
 ```
 
+## Step Groups & Nested Flows
+
+Laravel Flowpipe now supports **Step Groups** and **Nested Flows** for better organization and modularity.
+
+### Step Groups
+
+Define reusable collections of steps that can be referenced by name:
+
+```php
+use Grazulex\LaravelFlowpipe\Flowpipe;
+
+// Define a reusable group
+Flowpipe::group('user-validation', [
+    fn($user, $next) => $next(filter_var($user['email'], FILTER_VALIDATE_EMAIL) ? $user : throw new InvalidArgumentException('Invalid email')),
+    fn($user, $next) => $next(strlen($user['password']) >= 8 ? $user : throw new InvalidArgumentException('Password too short')),
+    fn($user, $next) => $next(strlen($user['name']) > 0 ? $user : throw new InvalidArgumentException('Name required')),
+]);
+
+// Use the group in flows
+$result = Flowpipe::make()
+    ->send(['email' => 'user@example.com', 'password' => 'securepass', 'name' => 'John'])
+    ->useGroup('user-validation')
+    ->through([
+        fn($user, $next) => $next(array_merge($user, ['id' => uniqid()])),
+    ])
+    ->thenReturn();
+```
+
+### Nested Flows
+
+Create isolated sub-workflows that run independently:
+
+```php
+$result = Flowpipe::make()
+    ->send(['name' => 'John Doe', 'email' => 'john@example.com'])
+    ->nested([
+        // This nested flow runs independently
+        fn($data, $next) => $next(array_merge($data, ['processed' => true])),
+        fn($data, $next) => $next(array_merge($data, ['id' => uniqid()])),
+    ])
+    ->through([
+        // Main flow continues here
+        fn($data, $next) => $next(array_merge($data, ['completed' => true])),
+    ])
+    ->thenReturn();
+```
+
+### Combining Groups and Nested Flows
+
+```php
+// Define groups
+Flowpipe::group('validation', [
+    fn($data, $next) => $next(/* validation logic */),
+]);
+
+Flowpipe::group('notifications', [
+    fn($data, $next) => $next(/* notification logic */),
+]);
+
+// Use in complex flows
+$result = Flowpipe::make()
+    ->send($userData)
+    ->useGroup('validation')
+    ->nested([
+        // Complex processing in isolation
+        fn($data, $next) => $next(/* complex processing */),
+    ])
+    ->useGroup('notifications')
+    ->thenReturn();
+```
+
+### Group Management
+
+```php
+// Check if a group exists
+if (Flowpipe::hasGroup('user-validation')) {
+    // Use the group
+}
+
+// Get all registered groups
+$groups = Flowpipe::getGroups();
+
+// Clear all groups (useful for testing)
+Flowpipe::clearGroups();
+```
+
+For comprehensive examples and advanced usage, see the [Step Groups Guide](step-groups.md).
+
 ### Tracing
 
 Tracing allows you to monitor and debug flow execution:
@@ -110,7 +199,7 @@ return [
 
 ## YAML Flow Definitions
 
-Create reusable flow definitions in YAML format:
+Create reusable flow definitions in YAML format, including support for groups and nested flows:
 
 ```yaml
 flow: UserProcessingFlow
@@ -119,19 +208,45 @@ description: Process user data with validation and notifications
 send:
   name: "John Doe"
   email: "john@example.com"
-  is_active: true
+  password: "securepass123"
 
 steps:
-  - condition:
-      field: email
-      operator: contains
-      value: "@"
-    then:
+  # Use a predefined group
+  - type: group
+    name: user-validation
+    
+  # Create a nested flow
+  - type: nested
+    steps:
       - type: closure
-        action: uppercase
-    else:
+        action: hash_password
       - type: closure
-        action: lowercase
+        action: remove_plain_password
+        
+  # Continue with main flow
+  - type: closure
+    action: create_user_record
+    
+  # Use another group
+  - type: group
+    name: user-notifications
+```
+
+### Group Definitions
+
+Define groups in separate YAML files:
+
+```yaml
+# groups/user-validation.yaml
+group: user-validation
+description: Validate user input data
+steps:
+  - type: closure
+    action: validate_email
+  - type: closure
+    action: validate_password_strength
+  - type: closure
+    action: validate_required_fields
 ```
 
 ### Supported Step Types
@@ -139,6 +254,8 @@ steps:
 - `closure` - Execute a closure action
 - `step` - Execute a custom step class
 - `condition` - Conditional execution
+- `group` - Execute a predefined group
+- `nested` - Execute a nested flow
 
 ### Supported Operators
 
@@ -300,6 +417,8 @@ See the [examples](../examples/README.md) directory for comprehensive examples a
 - `make()` - Create a new flowpipe instance
 - `send($data)` - Set initial data
 - `through(array $steps)` - Add steps to the pipeline
+- `useGroup(string $name)` - Add a predefined group to the pipeline
+- `nested(array $steps)` - Create a nested flow
 - `cache($key, $ttl, $store)` - Add cache step
 - `retry($maxAttempts, $delayMs, $shouldRetry)` - Add retry step
 - `rateLimit($key, $maxAttempts, $decayMinutes, $keyGenerator)` - Add rate limit step
@@ -309,6 +428,13 @@ See the [examples](../examples/README.md) directory for comprehensive examples a
 - `withTracer(Tracer $tracer)` - Add a tracer
 - `thenReturn()` - Execute and return result
 - `context()` - Get flow context
+
+### Static Methods
+
+- `group(string $name, array $steps)` - Define a reusable step group
+- `hasGroup(string $name)` - Check if a group exists
+- `getGroups()` - Get all registered groups
+- `clearGroups()` - Clear all registered groups (useful for testing)
 
 ### Conditional Steps
 
