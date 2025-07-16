@@ -30,6 +30,11 @@
 📈 **Export & Documentation** - Export to JSON, Mermaid, and Markdown  
 🔗 **Step Groups** - Reusable, named collections of steps  
 🎯 **Nested Flows** - Create isolated sub-workflows for complex logic  
+🛡️ **Advanced Error Handling** - Comprehensive error handling with retry, fallback, and compensation strategies  
+🔄 **Retry Strategies** - Exponential and linear backoff, custom retry logic  
+🎯 **Fallback Patterns** - Graceful degradation with fallback mechanisms  
+🔧 **Compensation** - Automatic rollback and cleanup operations  
+🎨 **Composite Strategies** - Combine multiple error handling approaches  
 
 ## Requirements
 
@@ -63,6 +68,104 @@ $result = Flowpipe::make()
     ->thenReturn();
 
 // Result: "HELLO-WORLD!"
+```
+
+### Error Handling with Retry
+
+```php
+use Grazulex\LaravelFlowpipe\Flowpipe;
+
+// Exponential backoff retry
+$result = Flowpipe::make()
+    ->send(['api_url' => 'https://api.example.com/data'])
+    ->exponentialBackoff(3, 100, 2.0) // 3 attempts, 100ms base delay, 2x multiplier
+    ->through([
+        fn($data, $next) => $next(callExternalAPI($data['api_url'])),
+        fn($data, $next) => $next(processAPIResponse($data)),
+    ])
+    ->thenReturn();
+
+// Linear backoff retry
+$result = Flowpipe::make()
+    ->send($userData)
+    ->linearBackoff(3, 100, 50) // 3 attempts, 100ms base + 50ms increment
+    ->through([
+        fn($data, $next) => $next(saveToDatabase($data)),
+    ])
+    ->thenReturn();
+```
+
+### Fallback Strategies
+
+```php
+use Grazulex\LaravelFlowpipe\Flowpipe;
+
+// Simple fallback with default value
+$result = Flowpipe::make()
+    ->send(['user_id' => 123])
+    ->withFallback(fn($payload, $error) => ['cached_data' => true, 'user_id' => $payload['user_id']])
+    ->through([
+        fn($data, $next) => $next(fetchUserProfile($data['user_id'])),
+    ])
+    ->thenReturn();
+
+// Exception-specific fallback
+$result = Flowpipe::make()
+    ->send($orderData)
+    ->fallbackOnException(NetworkException::class, fn($payload, $error) => getCachedOrderData($payload))
+    ->through([
+        fn($data, $next) => $next(fetchOrderFromAPI($data)),
+    ])
+    ->thenReturn();
+```
+
+### Compensation (Rollback) Strategies
+
+```php
+use Grazulex\LaravelFlowpipe\Flowpipe;
+
+// Automatic rollback on failure
+$result = Flowpipe::make()
+    ->send($transactionData)
+    ->withCompensation(function ($payload, $error, $context) {
+        // Rollback the transaction
+        rollbackTransaction($payload['transaction_id']);
+        return array_merge($payload, ['rolled_back' => true]);
+    })
+    ->through([
+        fn($data, $next) => $next(processTransaction($data)),
+    ])
+    ->thenReturn();
+
+// Exception-specific compensation
+$result = Flowpipe::make()
+    ->send($paymentData)
+    ->compensateOnException(PaymentException::class, fn($payload, $error) => refundPayment($payload))
+    ->through([
+        fn($data, $next) => $next(chargePayment($data)),
+    ])
+    ->thenReturn();
+```
+
+### Composite Error Handling
+
+```php
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\CompositeStrategy;
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\RetryStrategy;
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\FallbackStrategy;
+
+// Combine multiple strategies
+$compositeStrategy = CompositeStrategy::make()
+    ->retry(RetryStrategy::exponentialBackoff(3, 100, 2.0))
+    ->fallback(FallbackStrategy::withDefault(['status' => 'cached']));
+
+$result = Flowpipe::make()
+    ->send($data)
+    ->withErrorHandler($compositeStrategy)
+    ->through([
+        fn($data, $next) => $next(unreliableOperation($data)),
+    ])
+    ->thenReturn();
 ```
 
 ### Conditional Steps
@@ -383,6 +486,100 @@ $result = Flowpipe::make()
     ->thenReturn();
 ```
 
+### Error Handling in Production Workflows
+
+```php
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\CompositeStrategy;
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\RetryStrategy;
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\FallbackStrategy;
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\CompensationStrategy;
+
+// Production-ready order processing with comprehensive error handling
+$orderResult = Flowpipe::make()
+    ->send($orderData)
+    
+    // Step 1: Validate order with fallback
+    ->withFallback(function ($payload, $error) {
+        Log::warning('Order validation failed, using basic validation', [
+            'order_id' => $payload['order_id'],
+            'error' => $error->getMessage()
+        ]);
+        return array_merge($payload, ['validation_mode' => 'basic']);
+    })
+    ->through([
+        fn($data, $next) => $next(validateOrder($data)),
+    ])
+    
+    // Step 2: Process payment with retry and compensation
+    ->withErrorHandler(
+        CompositeStrategy::make()
+            ->retry(RetryStrategy::exponentialBackoff(3, 200, 2.0))
+            ->compensate(CompensationStrategy::make(function ($payload, $error, $context) {
+                // Rollback any partial payment processing
+                if (isset($payload['payment_intent_id'])) {
+                    cancelPaymentIntent($payload['payment_intent_id']);
+                }
+                return array_merge($payload, ['payment_cancelled' => true]);
+            }))
+    )
+    ->through([
+        fn($data, $next) => $next(processPayment($data)),
+    ])
+    
+    // Step 3: Update inventory with fallback to manual processing
+    ->withFallback(function ($payload, $error) {
+        // Queue for manual inventory processing
+        QueueManualInventoryUpdate::dispatch($payload);
+        return array_merge($payload, ['inventory_queued' => true]);
+    })
+    ->through([
+        fn($data, $next) => $next(updateInventory($data)),
+    ])
+    
+    // Step 4: Send confirmation with retry
+    ->exponentialBackoff(3, 100, 2.0)
+    ->through([
+        fn($data, $next) => $next(sendOrderConfirmation($data)),
+    ])
+    
+    ->thenReturn();
+```
+
+### Custom Error Handling Strategies
+
+```php
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\RetryStrategy;
+
+// Custom retry logic based on exception type
+$customRetryStrategy = RetryStrategy::make(5, 100, function ($exception, $attempt) {
+    // Only retry network errors
+    if ($exception instanceof NetworkException) {
+        return true;
+    }
+    
+    // Retry rate limit errors with exponential backoff
+    if ($exception instanceof RateLimitException) {
+        sleep(pow(2, $attempt)); // Custom backoff
+        return $attempt <= 3;
+    }
+    
+    // Don't retry validation errors
+    if ($exception instanceof ValidationException) {
+        return false;
+    }
+    
+    return $attempt <= 2; // Default retry for other errors
+});
+
+$result = Flowpipe::make()
+    ->send($data)
+    ->withRetryStrategy($customRetryStrategy)
+    ->through([
+        fn($data, $next) => $next(complexApiCall($data)),
+    ])
+    ->thenReturn();
+```
+
 ## Testing
 
 Laravel Flowpipe includes a dedicated test tracer for easy testing:
@@ -435,6 +632,18 @@ Laravel Flowpipe is optimized for performance:
 - `thenReturn()` - Execute and return result
 - `context()` - Get flow context
 
+### Error Handling Methods
+
+- `withErrorHandler(ErrorHandlerStrategy $strategy, int $maxAttempts = 3)` - Add custom error handler
+- `withRetryStrategy(RetryStrategy $strategy)` - Add retry strategy
+- `withFallback(Closure $fallbackHandler, ?Closure $shouldFallback = null)` - Add fallback handling
+- `withCompensation(Closure $compensationHandler, ?Closure $shouldCompensate = null)` - Add compensation handling
+- `withCompositeErrorHandler(array $strategies = [])` - Add composite error handling
+- `exponentialBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, float $multiplier = 2.0, ?Closure $shouldRetry = null)` - Add exponential backoff retry
+- `linearBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, int $increment = 100, ?Closure $shouldRetry = null)` - Add linear backoff retry
+- `fallbackOnException(string $exceptionClass, Closure $fallbackHandler)` - Add exception-specific fallback
+- `compensateOnException(string $exceptionClass, Closure $compensationHandler)` - Add exception-specific compensation
+
 ### Static Methods
 
 - `group(string $name, array $steps)` - Define a reusable step group
@@ -446,6 +655,34 @@ Laravel Flowpipe is optimized for performance:
 
 - `ConditionalStep::when($condition, $step)` - Execute step when condition is true
 - `ConditionalStep::unless($condition, $step)` - Execute step when condition is false
+
+### Error Handling Strategies
+
+#### RetryStrategy
+- `RetryStrategy::make(int $maxAttempts = 3, int $delayMs = 100, ?Closure $shouldRetry = null, ?Closure $delayCalculator = null)` - Basic retry
+- `RetryStrategy::exponentialBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, float $multiplier = 2.0, ?Closure $shouldRetry = null)` - Exponential backoff
+- `RetryStrategy::linearBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, int $increment = 100, ?Closure $shouldRetry = null)` - Linear backoff
+- `RetryStrategy::forException(string $exceptionClass, int $maxAttempts = 3, int $delayMs = 100)` - Exception-specific retry
+
+#### FallbackStrategy
+- `FallbackStrategy::make(Closure $fallbackHandler, ?Closure $shouldFallback = null)` - Custom fallback
+- `FallbackStrategy::withDefault(mixed $defaultValue, ?Closure $shouldFallback = null)` - Default value fallback
+- `FallbackStrategy::withTransform(Closure $transformer, ?Closure $shouldFallback = null)` - Transform fallback
+- `FallbackStrategy::withPayload(mixed $fallbackPayload, ?Closure $shouldFallback = null)` - Payload fallback
+- `FallbackStrategy::forException(string $exceptionClass, Closure $fallbackHandler)` - Exception-specific fallback
+
+#### CompensationStrategy
+- `CompensationStrategy::make(Closure $compensationHandler, ?Closure $shouldCompensate = null)` - Basic compensation
+- `CompensationStrategy::rollback(Closure $rollbackHandler, ?Closure $shouldCompensate = null)` - Rollback compensation
+- `CompensationStrategy::cleanup(Closure $cleanupHandler, ?Closure $shouldCompensate = null)` - Cleanup compensation
+- `CompensationStrategy::forException(string $exceptionClass, Closure $compensationHandler)` - Exception-specific compensation
+
+#### CompositeStrategy
+- `CompositeStrategy::make(array $strategies = [])` - Create composite strategy
+- `CompositeStrategy::addStrategy(ErrorHandlerStrategy $strategy)` - Add strategy to composite
+- `CompositeStrategy::retry(RetryStrategy $strategy)` - Add retry strategy
+- `CompositeStrategy::fallback(FallbackStrategy $strategy)` - Add fallback strategy
+- `CompositeStrategy::compensate(CompensationStrategy $strategy)` - Add compensation strategy
 
 ### Tracer Methods
 
