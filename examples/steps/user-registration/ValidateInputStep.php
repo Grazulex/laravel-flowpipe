@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Examples\Steps\UserRegistration;
 
+use Closure;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
 use Illuminate\Support\Facades\Validator;
+use InvalidArgumentException;
 
 final class ValidateInputStep implements FlowStep
 {
-    public function handle(mixed $payload, \Closure $next): mixed
+    public function handle(mixed $payload, Closure $next): mixed
     {
-        if (!is_array($payload)) {
-            throw new \InvalidArgumentException('Payload must be an array');
+        if (! is_array($payload)) {
+            throw new InvalidArgumentException('Payload must be an array');
         }
 
         $validator = Validator::make($payload, [
@@ -23,7 +25,7 @@ final class ValidateInputStep implements FlowStep
         ]);
 
         if ($validator->fails()) {
-            throw new \InvalidArgumentException('Validation failed: ' . implode(', ', $validator->errors()->all()));
+            throw new InvalidArgumentException('Validation failed: '.implode(', ', $validator->errors()->all()));
         }
 
         return $next($validator->validated());

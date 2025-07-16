@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Examples\Steps\UserRegistration;
 
+use Closure;
 use Exception;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
+use RuntimeException;
 
 final class LogRegistrationEventStep implements FlowStep
 {
-    public function handle(mixed $payload, \Closure $next): mixed
+    public function handle(mixed $payload, Closure $next): mixed
     {
-        if (!is_array($payload)) {
-            throw new \InvalidArgumentException('Payload must be an array');
+        if (! is_array($payload)) {
+            throw new InvalidArgumentException('Payload must be an array');
         }
 
         try {
@@ -36,7 +39,7 @@ final class LogRegistrationEventStep implements FlowStep
             return $next($payload);
 
         } catch (Exception $e) {
-            throw new \RuntimeException('Failed to log registration event: ' . $e->getMessage());
+            throw new RuntimeException('Failed to log registration event: '.$e->getMessage());
         }
     }
 }

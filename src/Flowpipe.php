@@ -7,6 +7,9 @@ namespace Grazulex\LaravelFlowpipe;
 use Closure;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
 use Grazulex\LaravelFlowpipe\Contracts\Tracer;
+use Grazulex\LaravelFlowpipe\Steps\GroupStep;
+use Grazulex\LaravelFlowpipe\Steps\NestedFlowStep;
+use Grazulex\LaravelFlowpipe\Support\FlowGroupRegistry;
 use Grazulex\LaravelFlowpipe\Support\Helpers;
 use Grazulex\LaravelFlowpipe\Support\StepResolver;
 use Grazulex\LaravelFlowpipe\Tracer as TracerNamespace;
@@ -50,6 +53,40 @@ final class Flowpipe
         return self::make(new TracerNamespace\TestTracer());
     }
 
+    /**
+     * Define a reusable group of steps
+     *
+     * @param  array<FlowStep|Closure|string>  $steps
+     */
+    public static function group(string $name, array $steps): void
+    {
+        FlowGroupRegistry::register($name, $steps);
+    }
+
+    /**
+     * Get all registered groups
+     */
+    public static function getGroups(): array
+    {
+        return FlowGroupRegistry::all();
+    }
+
+    /**
+     * Check if a group exists
+     */
+    public static function hasGroup(string $name): bool
+    {
+        return FlowGroupRegistry::has($name);
+    }
+
+    /**
+     * Clear all registered groups
+     */
+    public static function clearGroups(): void
+    {
+        FlowGroupRegistry::clear();
+    }
+
     public function withTracer(?Tracer $tracer): self
     {
         $this->context = new FlowContext($tracer);
@@ -69,7 +106,29 @@ final class Flowpipe
      */
     public function through(array $steps): self
     {
-        $this->steps = array_map([StepResolver::class, 'resolve'], $steps);
+        $this->steps = array_merge($this->steps, array_map([StepResolver::class, 'resolve'], $steps));
+
+        return $this;
+    }
+
+    /**
+     * Use a predefined group of steps
+     */
+    public function useGroup(string $name): self
+    {
+        $this->steps[] = new GroupStep($name);
+
+        return $this;
+    }
+
+    /**
+     * Create a nested flow
+     *
+     * @param  array<FlowStep|Closure|string>  $steps
+     */
+    public function nested(array $steps): self
+    {
+        $this->steps[] = new NestedFlowStep($steps);
 
         return $this;
     }

@@ -39,4 +39,20 @@ return [
         'enabled' => true,
         'default' => Grazulex\LaravelFlowpipe\Tracer\BasicTracer::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Groups Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for step groups and nested flows.
+    | Groups can be defined in YAML and used across multiple flows.
+    |
+    */
+
+    'groups' => [
+        'enabled' => true,
+        'auto_register' => true, // Automatically register groups from YAML files
+        'definitions_path' => 'flow_definitions/groups', // Path to group definitions
+    ],
 ];

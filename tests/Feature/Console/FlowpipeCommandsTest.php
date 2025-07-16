@@ -48,7 +48,7 @@ it('shows message when no flow definitions exist', function () {
     config(['flowpipe.definitions_path' => $emptyFlowsPath]);
 
     $this->artisan('flowpipe:list')
-        ->expectsOutput('No flow definitions found.')
+        ->expectsOutput('No flow definitions or groups found.')
         ->assertExitCode(0);
 });
 

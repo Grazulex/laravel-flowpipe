@@ -18,9 +18,10 @@ final class FlowpipeListCommand extends Command
     {
         $registry = new FlowDefinitionRegistry();
         $flows = $registry->list();
+        $groups = $registry->listGroups();
 
-        if ($flows->isEmpty()) {
-            $this->info('No flow definitions found.');
+        if ($flows->isEmpty() && $groups->isEmpty()) {
+            $this->info('No flow definitions or groups found.');
             $this->line('');
             $this->line('Create a flow definition in the <comment>'.config('flowpipe.definitions_path', 'flow_definitions').'</comment> directory.');
             $this->line('Use: <comment>php artisan flowpipe:make-flow {name}</comment> to create a new flow.');
@@ -28,13 +29,26 @@ final class FlowpipeListCommand extends Command
             return;
         }
 
-        $this->info('Available flow definitions:');
-        $this->line('');
+        if ($flows->isNotEmpty()) {
+            $this->info('Available flow definitions:');
+            $this->line('');
 
-        if ($this->option('detailed')) {
-            $this->displayDetailedList($registry, $flows);
-        } else {
-            $this->displaySimpleList($registry, $flows);
+            if ($this->option('detailed')) {
+                $this->displayDetailedList($registry, $flows);
+            } else {
+                $this->displaySimpleList($registry, $flows);
+            }
+        }
+
+        if ($groups->isNotEmpty()) {
+            $this->info('Available groups:');
+            $this->line('');
+
+            if ($this->option('detailed')) {
+                $this->displayDetailedGroupList($registry, $groups);
+            } else {
+                $this->displaySimpleGroupList($registry, $groups);
+            }
         }
 
         $this->line('');
@@ -82,6 +96,49 @@ final class FlowpipeListCommand extends Command
             } catch (Exception $e) {
                 $this->line("  <info>• {$flow}</info>");
                 $this->line('    <error>Error loading flow definition</error>');
+                $this->line('');
+            }
+        });
+    }
+
+    private function displaySimpleGroupList(FlowDefinitionRegistry $registry, \Illuminate\Support\Collection $groups): void
+    {
+        $groups->each(function (string $group) use ($registry): void {
+            try {
+                $definition = $registry->getGroup($group);
+                $description = $this->normalizeDescription($definition['description'] ?? 'No description');
+                $stepCount = $this->countSteps($definition['steps'] ?? []);
+
+                $this->line("  <info>• {$group}</info> <fg=yellow>(group)</fg=yellow>");
+                $this->line("    <comment>{$description}</comment>");
+                $this->line("    <fg=gray>Steps: {$stepCount}</fg=gray>");
+                $this->line('');
+            } catch (Exception $e) {
+                $this->line("  <info>• {$group}</info> <fg=yellow>(group)</fg=yellow>");
+                $this->line('    <error>Error loading group definition</error>');
+                $this->line('');
+            }
+        });
+    }
+
+    private function displayDetailedGroupList(FlowDefinitionRegistry $registry, \Illuminate\Support\Collection $groups): void
+    {
+        $groups->each(function (string $group) use ($registry): void {
+            try {
+                $definition = $registry->getGroup($group);
+                $description = $this->normalizeDescription($definition['description'] ?? 'No description');
+                $stepCount = $this->countSteps($definition['steps'] ?? []);
+                $stepTypes = $this->getStepTypes($definition['steps'] ?? []);
+
+                $this->line("  <info>• {$group}</info> <fg=yellow>(group)</fg=yellow>");
+                $this->line("    <comment>{$description}</comment>");
+                $this->line("    <fg=gray>Steps:</fg=gray> {$stepCount}");
+                $this->line('    <fg=gray>Types:</fg=gray> '.implode(', ', $stepTypes));
+                $this->line('    <fg=gray>Type:</fg=gray> <fg=yellow>Reusable Group</fg=yellow>');
+                $this->line('');
+            } catch (Exception $e) {
+                $this->line("  <info>• {$group}</info> <fg=yellow>(group)</fg=yellow>");
+                $this->line('    <error>Error loading group definition</error>');
                 $this->line('');
             }
         });

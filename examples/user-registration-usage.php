@@ -1,14 +1,16 @@
 <?php
 
-use Grazulex\LaravelFlowpipe\Flowpipe;
-use Examples\Steps\UserRegistration\ValidateInputStep;
+declare(strict_types=1);
+
+use Examples\Steps\UserRegistration\AssignDefaultRoleStep;
 use Examples\Steps\UserRegistration\CheckEmailUniquenessStep;
 use Examples\Steps\UserRegistration\CreateUserAccountStep;
-use Examples\Steps\UserRegistration\SendVerificationEmailStep;
-use Examples\Steps\UserRegistration\SetupUserProfileStep;
-use Examples\Steps\UserRegistration\AssignDefaultRoleStep;
-use Examples\Steps\UserRegistration\SendWelcomeEmailStep;
 use Examples\Steps\UserRegistration\LogRegistrationEventStep;
+use Examples\Steps\UserRegistration\SendVerificationEmailStep;
+use Examples\Steps\UserRegistration\SendWelcomeEmailStep;
+use Examples\Steps\UserRegistration\SetupUserProfileStep;
+use Examples\Steps\UserRegistration\ValidateInputStep;
+use Grazulex\LaravelFlowpipe\Flowpipe;
 
 // Example 1: Basic user registration flow
 $userData = [
@@ -34,21 +36,21 @@ try {
         ->thenReturn();
 
     echo "User registration successful!\n";
-    echo "User ID: " . $result['id'] . "\n";
-    echo "Email: " . $result['email'] . "\n";
-    echo "Profile created: " . ($result['profile_created'] ? 'Yes' : 'No') . "\n";
-    echo "Role assigned: " . ($result['role_assigned'] ? $result['assigned_role'] : 'No') . "\n";
-    echo "Welcome email sent: " . ($result['welcome_email_sent'] ? 'Yes' : 'No') . "\n";
+    echo 'User ID: '.$result['id']."\n";
+    echo 'Email: '.$result['email']."\n";
+    echo 'Profile created: '.($result['profile_created'] ? 'Yes' : 'No')."\n";
+    echo 'Role assigned: '.($result['role_assigned'] ? $result['assigned_role'] : 'No')."\n";
+    echo 'Welcome email sent: '.($result['welcome_email_sent'] ? 'Yes' : 'No')."\n";
 
 } catch (Exception $e) {
-    echo "Registration failed: " . $e->getMessage() . "\n";
+    echo 'Registration failed: '.$e->getMessage()."\n";
 }
 
 // Example 2: User registration with conditional steps
-use Grazulex\LaravelFlowpipe\Steps\ConditionalStep;
 use Grazulex\LaravelFlowpipe\Contracts\Condition;
+use Grazulex\LaravelFlowpipe\Steps\ConditionalStep;
 
-class EmailVerificationEnabledCondition implements Condition
+final class EmailVerificationEnabledCondition implements Condition
 {
     public function evaluate(mixed $payload): bool
     {
@@ -56,7 +58,7 @@ class EmailVerificationEnabledCondition implements Condition
     }
 }
 
-class WelcomeEmailEnabledCondition implements Condition
+final class WelcomeEmailEnabledCondition implements Condition
 {
     public function evaluate(mixed $payload): bool
     {
@@ -106,11 +108,11 @@ try {
         ->thenReturn();
 
     echo "Registration completed successfully!\n";
-    echo "Steps executed: " . $tracer->count() . "\n";
-    echo "First step: " . $tracer->firstStep() . "\n";
-    echo "Last step: " . $tracer->lastStep() . "\n";
+    echo 'Steps executed: '.$tracer->count()."\n";
+    echo 'First step: '.$tracer->firstStep()."\n";
+    echo 'Last step: '.$tracer->lastStep()."\n";
 
 } catch (Exception $e) {
-    echo "Registration failed at step: " . $tracer->lastStep() . "\n";
-    echo "Error: " . $e->getMessage() . "\n";
+    echo 'Registration failed at step: '.$tracer->lastStep()."\n";
+    echo 'Error: '.$e->getMessage()."\n";
 }
