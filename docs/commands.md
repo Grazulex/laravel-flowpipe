@@ -150,56 +150,6 @@ class ValidateInputStep implements FlowStep
 }
 ```
 
-### 4. `flowpipe:make-condition`
-
-Creates a new condition class for conditional steps.
-
-```bash
-php artisan flowpipe:make-condition {name}
-```
-
-#### Arguments
-
-- `name` : The name of the condition class to create
-
-#### Options
-
-- `--namespace=App\Flowpipe\Conditions` : Custom namespace for the condition class
-- `--force` : Overwrite existing condition class if it exists
-
-#### Examples
-
-```bash
-# Create a basic condition
-php artisan flowpipe:make-condition HasInventoryCondition
-
-# Create a condition with custom namespace
-php artisan flowpipe:make-condition PaymentValidCondition --namespace=App\Services\Payment\Conditions
-
-# Force overwrite existing condition
-php artisan flowpipe:make-condition HasInventoryCondition --force
-```
-
-#### Generated Condition Class
-
-```php
-<?php
-
-namespace App\Flowpipe\Conditions;
-
-use Grazulex\LaravelFlowpipe\Contracts\Condition;
-use Grazulex\LaravelFlowpipe\FlowContext;
-
-class HasInventoryCondition implements Condition
-{
-    public function evaluate(FlowContext $context): bool
-    {
-        // Your condition logic here
-        
-        return true;
-    }
-}
-```
 
 ### 5. `flowpipe:export`
 
