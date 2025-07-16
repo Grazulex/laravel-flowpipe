@@ -12,8 +12,9 @@ Welcome to the comprehensive documentation for Laravel Flowpipe - a modern, comp
 6. [Artisan Commands](#artisan-commands)
 7. [Testing](#testing)
 8. [Advanced Usage](#advanced-usage)
-9. [Performance](#performance)
-10. [Examples](#examples)
+9. [Integrations](#integrations)
+10. [Performance](#performance)
+11. [Examples](#examples)
 
 ## Getting Started
 
@@ -379,16 +380,39 @@ class DatabaseTracer implements Tracer
 {
     public function trace(string $stepClass, mixed $payloadBefore, mixed $payloadAfter, ?float $durationMs = null): void
     {
-        DB::table('flow_traces')->insert([
-            'step' => $stepClass,
-            'payload_before' => json_encode($payloadBefore),
-            'payload_after' => json_encode($payloadAfter),
-            'duration_ms' => $durationMs,
-            'created_at' => now(),
-        ]);
+        // Store trace data in database
     }
 }
 ```
+
+## Integrations
+
+### Laravel Queues
+
+Flowpipe works seamlessly with Laravel's queue system without any modifications. You can easily run your flows asynchronously by wrapping them in Laravel jobs.
+
+```php
+// In a Laravel Job
+class ProcessOrderJob implements ShouldQueue
+{
+    public function handle(): void
+    {
+        $result = Flowpipe::make()
+            ->send($this->orderData)
+            ->through([
+                ValidateOrderStep::class,
+                ProcessPaymentStep::class,
+                UpdateInventoryStep::class,
+            ])
+            ->thenReturn();
+    }
+}
+
+// Dispatch the job
+dispatch(new ProcessOrderJob($orderData))->onQueue('orders');
+```
+
+For comprehensive queue integration patterns, batching, error handling, and best practices, see the [Queue Integration Guide](queues.md).
 
 ## Performance
 
