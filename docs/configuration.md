@@ -51,6 +51,21 @@ return [
         'enabled' => true,
         'default' => \Grazulex\LaravelFlowpipe\Tracer\BasicTracer::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Groups Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for step groups and nested flows.
+    | Groups can be defined in YAML and used across multiple flows.
+    |
+    */
+    'groups' => [
+        'enabled' => true,
+        'auto_register' => true, // Automatically register groups from YAML files
+        'definitions_path' => 'flow_definitions/groups', // Path to group definitions
+    ],
 ];
 ```
 
@@ -93,6 +108,22 @@ Tracing helps you debug and monitor flow execution:
 - `enabled`: Whether tracing is active by default
 - `default`: The default tracer class to use
 
+### Groups Configuration
+
+Groups configuration controls step groups and nested flows functionality:
+
+```php
+'groups' => [
+    'enabled' => true,
+    'auto_register' => true, // Automatically register groups from YAML files
+    'definitions_path' => 'flow_definitions/groups', // Path to group definitions
+],
+```
+
+- `enabled`: Whether groups functionality is active
+- `auto_register`: Automatically load groups from YAML files on boot
+- `definitions_path`: Path to group definition files (relative to base path)
+
 ## Usage Examples
 
 ### Basic Configuration
@@ -107,6 +138,11 @@ return [
     'tracing' => [
         'enabled' => true,
         'default' => \Grazulex\LaravelFlowpipe\Tracer\BasicTracer::class,
+    ],
+    'groups' => [
+        'enabled' => true,
+        'auto_register' => true,
+        'definitions_path' => 'resources/flows/groups',
     ],
 ];
 ```
@@ -124,6 +160,11 @@ return [
         'enabled' => true,
         'default' => \Grazulex\LaravelFlowpipe\Tracer\BasicTracer::class,
     ],
+    'groups' => [
+        'enabled' => true,
+        'auto_register' => true,
+        'definitions_path' => 'flow_definitions/groups',
+    ],
 ];
 ```
 
@@ -137,6 +178,11 @@ return [
     'tracing' => [
         'enabled' => false,
         'default' => \Grazulex\LaravelFlowpipe\Tracer\BasicTracer::class,
+    ],
+    'groups' => [
+        'enabled' => true,
+        'auto_register' => true,
+        'definitions_path' => 'flow_definitions/groups',
     ],
 ];
 ```
@@ -153,6 +199,11 @@ return [
     'tracing' => [
         'enabled' => true,
         'default' => \App\Tracers\DatabaseTracer::class,
+    ],
+    'groups' => [
+        'enabled' => true,
+        'auto_register' => true,
+        'definitions_path' => 'flow_definitions/groups',
     ],
 ];
 ```
@@ -249,6 +300,11 @@ return [
         'enabled' => true,
         'default' => \Grazulex\LaravelFlowpipe\Tracer\BasicTracer::class,
     ],
+    'groups' => [
+        'enabled' => true,
+        'auto_register' => true,
+        'definitions_path' => 'flow_definitions/groups',
+    ],
 ];
 ```
 
@@ -279,6 +335,7 @@ public function boot()
 1. **Flow definitions not found**: Check that your `definitions_path` is correct and files exist
 2. **Step class not found**: Verify your `step_namespace` matches your actual class structure
 3. **Tracing not working**: Ensure tracing is enabled and the tracer class exists
+4. **Groups not loading**: Check that groups are enabled and the `groups.definitions_path` is correct
 
 ### Common Solutions
 
@@ -329,5 +386,6 @@ The current Laravel Flowpipe configuration is minimal and focused. It provides:
 - **Simple path configuration** for flow definitions
 - **Namespace configuration** for step classes  
 - **Basic tracing configuration** for debugging
+- **Groups configuration** for step groups and nested flows
 
 This keeps the configuration clean and focused on essential features while remaining easily extensible for future enhancements.
