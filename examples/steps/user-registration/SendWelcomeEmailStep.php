@@ -6,19 +6,20 @@ namespace Examples\Steps\UserRegistration;
 
 use Exception;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
-use Grazulex\LaravelFlowpipe\FlowContext;
 use Illuminate\Support\Facades\Mail;
 
 final class SendWelcomeEmailStep implements FlowStep
 {
-    public function handle(FlowContext $context): FlowContext
+    public function handle(mixed $payload, \Closure $next): mixed
     {
-        $userData = $context->get('user_data', []);
+        if (!is_array($payload)) {
+            throw new \InvalidArgumentException('Payload must be an array');
+        }
 
-        if (! $userData) {
-            $context->addError('User data is required to send welcome email');
+        $userData = $payload;
 
-            return $context;
+        if (!isset($userData['email']) || !isset($userData['name'])) {
+            throw new \InvalidArgumentException('User data with email and name is required to send welcome email');
         }
 
         try {
@@ -31,13 +32,12 @@ final class SendWelcomeEmailStep implements FlowStep
                     ->subject('Welcome to Our Platform!');
             });
 
-            $context->set('welcome_email_sent', true);
+            $userData['welcome_email_sent'] = true;
+
+            return $next($userData);
 
         } catch (Exception $e) {
-            $context->addError('Failed to send welcome email: '.$e->getMessage());
-            $context->set('welcome_email_sent', false);
+            throw new \RuntimeException('Failed to send welcome email: ' . $e->getMessage());
         }
-
-        return $context;
     }
 }

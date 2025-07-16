@@ -71,32 +71,53 @@ php artisan flowpipe:make-flow data-processing --template=advanced
 
 **Basic Template:**
 ```yaml
-name: user-registration
+flow: user-registration
 description: User registration flow
+
+# Optional: Initial payload to send to the flow
+# send: "initial data"
+
 steps:
-  - name: validate-input
-    class: App\Flowpipe\Steps\ValidateInputStep
-  - name: create-user
-    class: App\Flowpipe\Steps\CreateUserStep
-  - name: send-welcome-email
-    class: App\Flowpipe\Steps\SendWelcomeEmailStep
+  # Example: Simple closure step
+  - type: closure
+    action: uppercase
+    
+  # Example: Custom step class
+  # - step: App\Flowpipe\Steps\YourCustomStep
+    
+  # Example: Another closure step
+  - type: closure
+    action: trim
 ```
 
 **Conditional Template:**
 ```yaml
-name: order-processing
+flow: order-processing
 description: Order processing flow with conditions
+
+# Optional: Initial payload
+# send: {"active": true, "name": "John Doe"}
+
 steps:
-  - name: validate-order
-    class: App\Flowpipe\Steps\ValidateOrderStep
-  - name: check-inventory
-    class: App\Flowpipe\Steps\CheckInventoryStep
-    condition:
-      class: App\Flowpipe\Conditions\HasInventoryCondition
-  - name: process-payment
-    class: App\Flowpipe\Steps\ProcessPaymentStep
-  - name: send-confirmation
-    class: App\Flowpipe\Steps\SendConfirmationStep
+  # Example: Conditional step with dot notation
+  - condition: user.is_active
+    then:
+      - type: closure
+        action: uppercase
+      # - step: App\Flowpipe\Steps\SendWelcomeEmailStep
+    else:
+      - type: closure
+        action: lowercase
+      # - step: App\Flowpipe\Steps\SendRejectionEmailStep
+
+  # Example: Field-based condition
+  - condition:
+      field: status
+      operator: equals
+      value: "approved"
+    then:
+      - type: closure
+        action: trim
 ```
 
 ### 3. `flowpipe:make-step`
@@ -136,16 +157,16 @@ php artisan flowpipe:make-step ValidateInputStep --force
 
 namespace App\Flowpipe\Steps;
 
+use Closure;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
-use Grazulex\LaravelFlowpipe\FlowContext;
 
-class ValidateInputStep implements FlowStep
+final class ValidateInputStep implements FlowStep
 {
-    public function handle(FlowContext $context): FlowContext
+    public function handle(mixed $payload, Closure $next): mixed
     {
-        // Your step logic here
-        
-        return $context;
+        // TODO: Add your logic here
+
+        return $next($payload);
     }
 }
 ```

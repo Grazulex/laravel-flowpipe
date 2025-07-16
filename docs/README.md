@@ -30,8 +30,8 @@ use Grazulex\LaravelFlowpipe\Flowpipe;
 $result = Flowpipe::make()
     ->send('Hello World')
     ->through([
-        fn($data) => strtoupper($data),
-        fn($data) => str_replace(' ', '-', $data),
+        fn($data, $next) => $next(strtoupper($data)),
+        fn($data, $next) => $next(str_replace(' ', '-', $data)),
     ])
     ->thenReturn();
 
@@ -53,11 +53,35 @@ Steps are the building blocks of flows. They can be:
 
 ### Conditional Logic
 
-Laravel Flowpipe supports conditional execution with:
-- `when()` - Execute steps when condition is true
-- `unless()` - Execute steps when condition is false
-- Dot notation for nested array access
-- Field operators for complex conditions
+Laravel Flowpipe supports conditional execution through the `ConditionalStep` class:
+
+```php
+use Grazulex\LaravelFlowpipe\Steps\ConditionalStep;
+use Grazulex\LaravelFlowpipe\Contracts\Condition;
+
+class IsActiveCondition implements Condition
+{
+    public function evaluate(mixed $payload): bool
+    {
+        return is_array($payload) && ($payload['active'] ?? false);
+    }
+}
+
+$result = Flowpipe::make()
+    ->send(['active' => true, 'name' => 'John'])
+    ->through([
+        fn($data, $next) => $next($data['name']),
+        ConditionalStep::when(
+            new IsActiveCondition(),
+            fn($name, $next) => $next(strtoupper($name))
+        ),
+        ConditionalStep::unless(
+            new IsActiveCondition(),
+            fn($name, $next) => $next(strtolower($name))
+        ),
+    ])
+    ->thenReturn();
+```
 
 ### Tracing
 
@@ -178,14 +202,13 @@ public function test_user_processing_flow()
     $result = Flowpipe::make()
         ->send(['name' => 'John'])
         ->through([
-            fn($data) => strtoupper($data['name']),
+            fn($data, $next) => $next(strtoupper($data['name'])),
         ])
         ->withTracer($tracer)
         ->thenReturn();
     
     $this->assertEquals('JOHN', $result);
-    $this->assertCount(1, $tracer->getSteps());
-    $this->assertEquals('JOHN', $tracer->getLastStep()['result']);
+    $this->assertCount(1, $tracer->count());
 }
 ```
 
@@ -198,13 +221,13 @@ use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
 
 class ValidateUserStep implements FlowStep
 {
-    public function handle($data, \Closure $next)
+    public function handle(mixed $payload, \Closure $next): mixed
     {
-        if (!isset($data['email'])) {
+        if (!is_array($payload) || !isset($payload['email'])) {
             throw new \InvalidArgumentException('Email is required');
         }
         
-        return $next($data);
+        return $next($payload);
     }
 }
 ```
@@ -215,17 +238,17 @@ class ValidateUserStep implements FlowStep
 $result = Flowpipe::make()
     ->send($userData)
     ->through([
-        ValidateUserStep::class,
-        function ($data) {
+        new ValidateUserStep(),
+        function ($data, $next) {
             return Flowpipe::make()
                 ->send($data)
                 ->through([
-                    ProcessUserStep::class,
-                    EnrichUserStep::class,
+                    new ProcessUserStep(),
+                    new EnrichUserStep(),
                 ])
                 ->thenReturn();
         },
-        NotifyUserStep::class,
+        new NotifyUserStep(),
     ])
     ->thenReturn();
 ```
@@ -237,12 +260,13 @@ use Grazulex\LaravelFlowpipe\Contracts\Tracer;
 
 class DatabaseTracer implements Tracer
 {
-    public function trace(string $step, $data, ?int $duration = null): void
+    public function trace(string $stepClass, mixed $payloadBefore, mixed $payloadAfter, ?float $durationMs = null): void
     {
         DB::table('flow_traces')->insert([
-            'step' => $step,
-            'data' => json_encode($data),
-            'duration' => $duration,
+            'step' => $stepClass,
+            'payload_before' => json_encode($payloadBefore),
+            'payload_after' => json_encode($payloadAfter),
+            'duration_ms' => $durationMs,
             'created_at' => now(),
         ]);
     }
@@ -276,22 +300,30 @@ See the [examples](../examples/README.md) directory for comprehensive examples a
 - `make()` - Create a new flowpipe instance
 - `send($data)` - Set initial data
 - `through(array $steps)` - Add steps to the pipeline
-- `when($condition, array $steps)` - Conditional execution
-- `unless($condition, array $steps)` - Negative conditional execution
+- `cache($key, $ttl, $store)` - Add cache step
+- `retry($maxAttempts, $delayMs, $shouldRetry)` - Add retry step
+- `rateLimit($key, $maxAttempts, $decayMinutes, $keyGenerator)` - Add rate limit step
+- `transform($transformer)` - Add transform step
+- `validate($rules, $messages, $customAttributes)` - Add validation step
+- `batch($batchSize, $preserveKeys)` - Add batch step
 - `withTracer(Tracer $tracer)` - Add a tracer
 - `thenReturn()` - Execute and return result
+- `context()` - Get flow context
 
-### Conditional Operations
+### Conditional Steps
 
-- Field-based conditions: `field.operator.value`
-- Dot notation: `user.profile.active`
-- Array operations: `roles.contains.admin`
+- `ConditionalStep::when($condition, $step)` - Execute step when condition is true
+- `ConditionalStep::unless($condition, $step)` - Execute step when condition is false
 
-### Tracing Methods
+### Tracer Methods
 
-- `getSteps()` - Get all traced steps
-- `getLastStep()` - Get the last executed step
-- `clearTraces()` - Clear all traces
+- `trace($stepClass, $before, $after, $duration)` - Trace step execution
+- `all()` - Get all trace logs
+- `steps()` - Get all step names
+- `count()` - Get number of traced steps
+- `firstStep()` - Get first step name
+- `lastStep()` - Get last step name
+- `clear()` - Clear all traces
 
 ---
 

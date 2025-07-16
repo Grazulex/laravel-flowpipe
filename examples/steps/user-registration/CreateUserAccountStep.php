@@ -6,41 +6,40 @@ namespace Examples\Steps\UserRegistration;
 
 use Exception;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
-use Grazulex\LaravelFlowpipe\FlowContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 final class CreateUserAccountStep implements FlowStep
 {
-    public function handle(FlowContext $context): FlowContext
+    public function handle(mixed $payload, \Closure $next): mixed
     {
-        $validatedData = $context->get('validated_data', []);
+        if (!is_array($payload)) {
+            throw new \InvalidArgumentException('Payload must be an array');
+        }
 
         try {
             $userId = DB::table('users')->insertGetId([
-                'name' => $validatedData['name'],
-                'email' => $validatedData['email'],
-                'password' => Hash::make($validatedData['password']),
+                'name' => $payload['name'],
+                'email' => $payload['email'],
+                'password' => Hash::make($payload['password']),
                 'email_verified_at' => null,
                 'remember_token' => Str::random(10),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            $context->set('user_id', $userId);
-            $context->set('user_created', true);
-            $context->set('user_data', [
+            $userData = [
                 'id' => $userId,
-                'name' => $validatedData['name'],
-                'email' => $validatedData['email'],
-            ]);
+                'name' => $payload['name'],
+                'email' => $payload['email'],
+                'created_at' => now(),
+            ];
+
+            return $next($userData);
 
         } catch (Exception $e) {
-            $context->addError('Failed to create user account: '.$e->getMessage());
-            $context->set('user_created', false);
+            throw new \RuntimeException('Failed to create user account: ' . $e->getMessage());
         }
-
-        return $context;
     }
 }

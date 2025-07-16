@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace Examples\Steps\UserRegistration;
 
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
-use Grazulex\LaravelFlowpipe\FlowContext;
 use Illuminate\Support\Facades\DB;
 
 final class CheckEmailUniquenessStep implements FlowStep
 {
-    public function handle(FlowContext $context): FlowContext
+    public function handle(mixed $payload, \Closure $next): mixed
     {
-        $validatedData = $context->get('validated_data', []);
-        $email = $validatedData['email'] ?? null;
+        if (!is_array($payload)) {
+            throw new \InvalidArgumentException('Payload must be an array');
+        }
 
-        if (! $email) {
-            $context->addError('Email is required for uniqueness check');
+        $email = $payload['email'] ?? null;
 
-            return $context;
+        if (!$email) {
+            throw new \InvalidArgumentException('Email is required for uniqueness check');
         }
 
         $emailExists = DB::table('users')
@@ -26,14 +26,9 @@ final class CheckEmailUniquenessStep implements FlowStep
             ->exists();
 
         if ($emailExists) {
-            $context->addError('This email address is already registered');
-            $context->set('email_unique', false);
-
-            return $context;
+            throw new \InvalidArgumentException('This email address is already registered');
         }
 
-        $context->set('email_unique', true);
-
-        return $context;
+        return $next($payload);
     }
 }

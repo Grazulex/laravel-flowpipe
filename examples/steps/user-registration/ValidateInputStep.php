@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace Examples\Steps\UserRegistration;
 
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
-use Grazulex\LaravelFlowpipe\FlowContext;
 use Illuminate\Support\Facades\Validator;
 
 final class ValidateInputStep implements FlowStep
 {
-    public function handle(FlowContext $context): FlowContext
+    public function handle(mixed $payload, \Closure $next): mixed
     {
-        $userData = $context->get('user_data', []);
+        if (!is_array($payload)) {
+            throw new \InvalidArgumentException('Payload must be an array');
+        }
 
-        $validator = Validator::make($userData, [
+        $validator = Validator::make($payload, [
             'email' => 'required|email|max:255',
             'password' => 'required|min:8|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
             'name' => 'required|string|max:255',
@@ -22,15 +23,9 @@ final class ValidateInputStep implements FlowStep
         ]);
 
         if ($validator->fails()) {
-            $context->addErrors($validator->errors()->all());
-            $context->set('validation_passed', false);
-
-            return $context;
+            throw new \InvalidArgumentException('Validation failed: ' . implode(', ', $validator->errors()->all()));
         }
 
-        $context->set('validation_passed', true);
-        $context->set('validated_data', $validator->validated());
-
-        return $context;
+        return $next($validator->validated());
     }
 }

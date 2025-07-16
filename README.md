@@ -54,9 +54,9 @@ use Grazulex\LaravelFlowpipe\Flowpipe;
 $result = Flowpipe::make()
     ->send('Hello World')
     ->through([
-        fn($data) => strtoupper($data),
-        fn($data) => str_replace(' ', '-', $data),
-        fn($data) => $data . '!',
+        fn($data, $next) => $next(strtoupper($data)),
+        fn($data, $next) => $next(str_replace(' ', '-', $data)),
+        fn($data, $next) => $next($data . '!'),
     ])
     ->thenReturn();
 
@@ -66,16 +66,29 @@ $result = Flowpipe::make()
 ### Conditional Steps
 
 ```php
+use Grazulex\LaravelFlowpipe\Steps\ConditionalStep;
+use Grazulex\LaravelFlowpipe\Contracts\Condition;
+
+class IsActiveCondition implements Condition
+{
+    public function evaluate(mixed $payload): bool
+    {
+        return is_array($payload) && ($payload['active'] ?? false);
+    }
+}
+
 $result = Flowpipe::make()
     ->send(['active' => true, 'name' => 'John'])
     ->through([
-        fn($data) => $data['name'],
-    ])
-    ->when('active', [
-        fn($name) => strtoupper($name),
-    ])
-    ->unless('active', [
-        fn($name) => strtolower($name),
+        fn($data, $next) => $next($data['name']),
+        ConditionalStep::when(
+            new IsActiveCondition(),
+            fn($name, $next) => $next(strtoupper($name))
+        ),
+        ConditionalStep::unless(
+            new IsActiveCondition(),
+            fn($name, $next) => $next(strtolower($name))
+        ),
     ])
     ->thenReturn();
 
@@ -162,9 +175,9 @@ For detailed documentation, examples, and advanced usage, please see:
 $result = Flowpipe::make()
     ->send('  hello world  ')
     ->through([
-        fn($text) => trim($text),
-        fn($text) => ucwords($text),
-        fn($text) => str_replace(' ', '-', $text),
+        fn($text, $next) => $next(trim($text)),
+        fn($text, $next) => $next(ucwords($text)),
+        fn($text, $next) => $next(str_replace(' ', '-', $text)),
     ])
     ->thenReturn();
 
@@ -177,15 +190,30 @@ $result = Flowpipe::make()
 use App\Flowpipe\Steps\ValidateUserStep;
 use App\Flowpipe\Steps\SendWelcomeEmailStep;
 use App\Flowpipe\Steps\AddToCrmStep;
+use Grazulex\LaravelFlowpipe\Steps\ConditionalStep;
+use Grazulex\LaravelFlowpipe\Contracts\Condition;
+use Grazulex\LaravelFlowpipe\Tracer\BasicTracer;
+
+class IsActiveCondition implements Condition
+{
+    public function evaluate(mixed $payload): bool
+    {
+        return is_array($payload) && ($payload['is_active'] ?? false);
+    }
+}
 
 $user = Flowpipe::make()
     ->send($userData)
     ->through([
-        ValidateUserStep::class,
-    ])
-    ->when('is_active', [
-        SendWelcomeEmailStep::class,
-        AddToCrmStep::class,
+        new ValidateUserStep(),
+        ConditionalStep::when(
+            new IsActiveCondition(),
+            new SendWelcomeEmailStep()
+        ),
+        ConditionalStep::when(
+            new IsActiveCondition(),
+            new AddToCrmStep()
+        ),
     ])
     ->withTracer(new BasicTracer())
     ->thenReturn();
@@ -194,19 +222,41 @@ $user = Flowpipe::make()
 ### Complex Conditional Logic
 
 ```php
+use Grazulex\LaravelFlowpipe\Steps\ConditionalStep;
+use Grazulex\LaravelFlowpipe\Contracts\Condition;
+
+class IsAdminCondition implements Condition
+{
+    public function evaluate(mixed $payload): bool
+    {
+        return is_array($payload) && ($payload['role'] ?? '') === 'admin';
+    }
+}
+
+class IsActiveCondition implements Condition
+{
+    public function evaluate(mixed $payload): bool
+    {
+        return is_array($payload) && ($payload['active'] ?? false);
+    }
+}
+
 $result = Flowpipe::make()
     ->send(['user' => ['role' => 'admin', 'active' => true]])
     ->through([
-        fn($data) => $data['user'],
-    ])
-    ->when('user.role', 'admin', [
-        fn($user) => array_merge($user, ['permissions' => ['read', 'write', 'delete']]),
-    ])
-    ->when('user.active', true, [
-        fn($user) => array_merge($user, ['status' => 'enabled']),
-    ])
-    ->unless('user.active', [
-        fn($user) => array_merge($user, ['status' => 'disabled']),
+        fn($data, $next) => $next($data['user']),
+        ConditionalStep::when(
+            new IsAdminCondition(),
+            fn($user, $next) => $next(array_merge($user, ['permissions' => ['read', 'write', 'delete']]))
+        ),
+        ConditionalStep::when(
+            new IsActiveCondition(),
+            fn($user, $next) => $next(array_merge($user, ['status' => 'enabled']))
+        ),
+        ConditionalStep::unless(
+            new IsActiveCondition(),
+            fn($user, $next) => $next(array_merge($user, ['status' => 'disabled']))
+        ),
     ])
     ->thenReturn();
 ```
@@ -225,14 +275,13 @@ public function test_user_processing_flow()
     $result = Flowpipe::make()
         ->send(['name' => 'John'])
         ->through([
-            fn($data) => strtoupper($data['name']),
+            fn($data, $next) => $next(strtoupper($data['name'])),
         ])
         ->withTracer($tracer)
         ->thenReturn();
     
     $this->assertEquals('JOHN', $result);
-    $this->assertCount(1, $tracer->getSteps());
-    $this->assertEquals('JOHN', $tracer->getLastStep()['result']);
+    $this->assertCount(1, $tracer->count());
 }
 ```
 
@@ -244,6 +293,38 @@ Laravel Flowpipe is optimized for performance:
 - **Memory Efficient**: Minimal memory footprint
 - **Traceable**: Optional tracing with minimal overhead
 - **Cacheable**: Flow definitions can be cached for better performance
+
+## API Reference
+
+### Flowpipe Methods
+
+- `make()` - Create a new flowpipe instance
+- `send($data)` - Set initial data
+- `through(array $steps)` - Add steps to the pipeline
+- `cache($key, $ttl, $store)` - Add cache step
+- `retry($maxAttempts, $delayMs, $shouldRetry)` - Add retry step
+- `rateLimit($key, $maxAttempts, $decayMinutes, $keyGenerator)` - Add rate limit step
+- `transform($transformer)` - Add transform step
+- `validate($rules, $messages, $customAttributes)` - Add validation step
+- `batch($batchSize, $preserveKeys)` - Add batch step
+- `withTracer(Tracer $tracer)` - Add a tracer
+- `thenReturn()` - Execute and return result
+- `context()` - Get flow context
+
+### Conditional Steps
+
+- `ConditionalStep::when($condition, $step)` - Execute step when condition is true
+- `ConditionalStep::unless($condition, $step)` - Execute step when condition is false
+
+### Tracer Methods
+
+- `trace($stepClass, $before, $after, $duration)` - Trace step execution
+- `all()` - Get all trace logs
+- `steps()` - Get all step names
+- `count()` - Get number of traced steps
+- `firstStep()` - Get first step name
+- `lastStep()` - Get last step name
+- `clear()` - Clear all traces
 
 ## Contributing
 
