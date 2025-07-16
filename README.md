@@ -399,8 +399,8 @@ For detailed documentation, examples, and advanced usage, please see:
 - 🧪 [Testing](docs/testing.md)
 - 🎨 [Artisan Commands](docs/commands.md)
 - 🛡️ [Error Handling](docs/error-handling.md)
-- � [Queue Integration](docs/queues.md)
-- �📖 [Error Handling Usage Guide](docs/error-handling-usage.md)
+- 🔄 [Queue Integration](docs/queues.md)
+- 📖 [Error Handling Usage Guide](docs/error-handling-usage.md)
 - 🎯 [Usage Examples](docs/usage-examples.md)
 
 ## Examples
