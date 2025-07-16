@@ -1,35 +1,42 @@
-name: content-moderation
+flow: content-moderation
 description: Automated content moderation with AI analysis and human review workflow
 
 steps:
-  - name: analyze-content-safety
+  - type: action
+    name: analyze-content-safety
     class: Examples\Steps\ContentModeration\AnalyzeContentSafetyStep
     description: Analyze content for safety violations using AI
 
-  - name: check-spam-indicators
+  - type: action
+    name: check-spam-indicators
     class: Examples\Steps\ContentModeration\CheckSpamIndicatorsStep
     description: Check for spam indicators and patterns
 
-  - name: auto-approve-safe-content
+  - type: action
+    name: auto-approve-safe-content
     class: Examples\Steps\ContentModeration\AutoApproveSafeContentStep
     description: Automatically approve content that passes all checks
     condition:
       class: Examples\Conditions\ContentModeration\ContentIsSafeCondition
 
-  - name: flag-for-human-review
+  - type: action
+    name: flag-for-human-review
     class: Examples\Steps\ContentModeration\FlagForHumanReviewStep
     description: Flag questionable content for human review
     condition:
       class: Examples\Conditions\ContentModeration\RequiresHumanReviewCondition
 
-  - name: notify-content-author
+  - type: action
+    name: notify-content-author
     class: Examples\Steps\ContentModeration\NotifyContentAuthorStep
     description: Notify content author of moderation status
 
-  - name: update-content-status
+  - type: action
+    name: update-content-status
     class: Examples\Steps\ContentModeration\UpdateContentStatusStep
     description: Update content moderation status in database
 
-  - name: log-moderation-action
+  - type: action
+    name: log-moderation-action
     class: Examples\Steps\ContentModeration\LogModerationActionStep
     description: Log moderation action for audit trail

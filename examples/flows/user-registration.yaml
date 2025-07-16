@@ -1,4 +1,5 @@
-name: user-registration
+
+flow: user-registration
 description: Complete user registration process with validation, email verification, and profile setup
 
 send:
@@ -8,34 +9,42 @@ send:
   terms_accepted: true
 
 steps:
-  - name: validate-input
-    step: Examples\Steps\UserRegistration\ValidateInputStep
+  - type: action
+    name: validate-input
+    class: Examples\Steps\UserRegistration\ValidateInputStep
     description: Validate user input data (email, password, name)
 
-  - name: check-email-uniqueness
-    step: Examples\Steps\UserRegistration\CheckEmailUniquenessStep
+  - type: action
+    name: check-email-uniqueness
+    class: Examples\Steps\UserRegistration\CheckEmailUniquenessStep
     description: Verify email address is not already registered
 
-  - name: create-user-account
-    step: Examples\Steps\UserRegistration\CreateUserAccountStep
+  - type: action
+    name: create-user-account
+    class: Examples\Steps\UserRegistration\CreateUserAccountStep
     description: Create user account in database
 
-  - name: send-verification-email
-    step: Examples\Steps\UserRegistration\SendVerificationEmailStep
+  - type: action
+    name: send-verification-email
+    class: Examples\Steps\UserRegistration\SendVerificationEmailStep
     description: Send email verification link to user
 
-  - name: setup-user-profile
-    step: Examples\Steps\UserRegistration\SetupUserProfileStep
+  - type: action
+    name: setup-user-profile
+    class: Examples\Steps\UserRegistration\SetupUserProfileStep
     description: Initialize user profile with default settings
 
-  - name: assign-default-role
-    step: Examples\Steps\UserRegistration\AssignDefaultRoleStep
+  - type: action
+    name: assign-default-role
+    class: Examples\Steps\UserRegistration\AssignDefaultRoleStep
     description: Assign default user role and permissions
 
-  - name: send-welcome-email
-    step: Examples\Steps\UserRegistration\SendWelcomeEmailStep
+  - type: action
+    name: send-welcome-email
+    class: Examples\Steps\UserRegistration\SendWelcomeEmailStep
     description: Send welcome email to new user
 
-  - name: log-registration-event
-    step: Examples\Steps\UserRegistration\LogRegistrationEventStep
+  - type: action
+    name: log-registration-event
+    class: Examples\Steps\UserRegistration\LogRegistrationEventStep
     description: Log user registration for analytics

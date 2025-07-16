@@ -14,6 +14,7 @@ use Throwable;
 class FlowDefinitionValidator implements FlowDefinitionValidatorInterface
 {
     private array $supportedStepTypes = [
+        'action',
         'closure',
         'step',
         'condition',
@@ -58,7 +59,7 @@ class FlowDefinitionValidator implements FlowDefinitionValidatorInterface
         $stepErrors = $this->validateSteps($definition['steps'] ?? []);
         $errors = array_merge($errors, $stepErrors);
 
-        $referenceErrors = $this->validateReferences($definition['steps'] ?? []);
+        $referenceErrors = $this->validateReferences($definition['steps'] ?? [], $warnings);
         $errors = array_merge($errors, $referenceErrors);
 
         return new ValidationResult($flowName, $errors, $warnings);
@@ -73,9 +74,9 @@ class FlowDefinitionValidator implements FlowDefinitionValidatorInterface
         foreach ($flows as $flowName) {
             try {
                 $definition = $registry->get($flowName);
-                $results[] = $this->validateFlowDefinition($definition);
+                $results[$flowName] = $this->validateFlowDefinition($definition);
             } catch (Throwable $e) {
-                $results[] = new ValidationResult($flowName, ["Failed to load flow definition: {$e->getMessage()}"], []);
+                $results[$flowName] = new ValidationResult($flowName, ["Failed to load flow definition: {$e->getMessage()}"], []);
             }
         }
 
@@ -222,21 +223,28 @@ class FlowDefinitionValidator implements FlowDefinitionValidatorInterface
         return $errors;
     }
 
-    private function validateReferences(array $steps): array
+    private function validateReferences(array $steps, array &$warnings = []): array
     {
         $errors = [];
+        
+        // First, collect all groups defined in this flow
+        $definedGroups = $this->collectDefinedGroups($steps);
 
         foreach ($steps as $index => $step) {
             $stepNum = $index + 1;
 
             switch ($step['type'] ?? '') {
                 case 'group':
-                    if (isset($step['name']) && ! FlowGroupRegistry::has($step['name'])) {
-                        $errors[] = "Step {$stepNum}: Group '{$step['name']}' not found";
+                    if (isset($step['name'])) {
+                        // Check if group exists in registry or is defined in this flow
+                        if (!FlowGroupRegistry::has($step['name']) && !in_array($step['name'], $definedGroups)) {
+                            $warnings[] = "Step {$stepNum}: Group '{$step['name']}' not found in registry or flow definition";
+                        }
                     }
                     break;
 
                 case 'step':
+                case 'action':
                     if (isset($step['class'])) {
                         if (! class_exists($step['class'])) {
                             $errors[] = "Step {$stepNum}: Class '{$step['class']}' not found";
@@ -248,7 +256,7 @@ class FlowDefinitionValidator implements FlowDefinitionValidatorInterface
 
                 case 'nested':
                     if (isset($step['steps'])) {
-                        $nestedErrors = $this->validateReferences($step['steps']);
+                        $nestedErrors = $this->validateReferences($step['steps'], $warnings);
                         $errors = array_merge($errors, $nestedErrors);
                     }
                     break;
@@ -256,6 +264,26 @@ class FlowDefinitionValidator implements FlowDefinitionValidatorInterface
         }
 
         return $errors;
+    }
+
+    private function collectDefinedGroups(array $steps): array
+    {
+        $groups = [];
+        
+        foreach ($steps as $step) {
+            // Si c'est un groupe avec une définition complète
+            if (($step['type'] ?? '') === 'group' && isset($step['name']) && isset($step['steps'])) {
+                $groups[] = $step['name'];
+            }
+            
+            // Recherche récursive dans les nested steps
+            if (($step['type'] ?? '') === 'nested' && isset($step['steps'])) {
+                $nestedGroups = $this->collectDefinedGroups($step['steps']);
+                $groups = array_merge($groups, $nestedGroups);
+            }
+        }
+        
+        return array_unique($groups);
     }
 
     private function implementsFlowStep(string $className): bool
