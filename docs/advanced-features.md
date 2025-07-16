@@ -113,13 +113,14 @@ $result = Flowpipe::make()
 ```
 
 ### 5. Validation Step
-Validate data using Laravel's validation:
+Validate data using Laravel's validation. If you pass a scalar (string, int, etc.) and only one rule, the value will be automatically wrapped and unwrapped for you:
 
 ```php
 use Grazulex\LaravelFlowpipe\Steps\ValidationStep;
 
+// Example with array payload (returns validated array)
 $result = Flowpipe::make()
-    ->send($userData)
+    ->send(['email' => 'foo@bar.com', 'name' => 'John'])
     ->validate([
         'email' => 'required|email',
         'name' => 'required|string|max:255',
@@ -128,6 +129,12 @@ $result = Flowpipe::make()
         ProcessUserStep::class,
     ])
     ->thenReturn();
+
+// Example with scalar payload and one rule (returns validated value, not array)
+$result = Flowpipe::make()
+    ->send('foo@bar.com')
+    ->validate(['email' => 'required|email'])
+    ->thenReturn(); // $result === 'foo@bar.com'
 
 // Helper methods
 $result = Flowpipe::make()
