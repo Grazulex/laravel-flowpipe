@@ -14,16 +14,7 @@ $result = Flowpipe::make()
     ->send($expensiveData)
     ->cache('my-cache-key', 3600) // Cache for 1 hour
     ->through([
-        fn($data) => expensiveOperation($data),
-    ])
-    ->thenReturn();
-
-// Or using the step directly
-$result = Flowpipe::make()
-    ->send($data)
-    ->through([
-        \Grazulex\LaravelFlowpipe\Steps\CacheStep::make('my-key', 3600, 'redis'),
-        ExpensiveStep::class,
+        fn($data, $next) => $next(expensiveOperation($data)),
     ])
     ->thenReturn();
 ```
@@ -36,19 +27,19 @@ $result = Flowpipe::make()
     ->send($unreliableData)
     ->retry(3, 100) // 3 attempts, 100ms delay
     ->through([
-        fn($data) => unreliableApiCall($data),
+        fn($data, $next) => $next(unreliableApiCall($data)),
     ])
     ->thenReturn();
 
 // With custom retry logic
 $result = Flowpipe::make()
     ->send($data)
-    ->retry(5, 200, function ($exception, $attempt) {
+    ->retry(5, 200, function ($exception) {
         // Only retry on specific exceptions
-        return $exception instanceof ConnectionException && $attempt < 3;
+        return $exception instanceof ConnectionException;
     })
     ->through([
-        NetworkStep::class,
+        fn($data, $next) => $next(networkOperation($data)),
     ])
     ->thenReturn();
 ```
@@ -61,7 +52,7 @@ $result = Flowpipe::make()
     ->send($apiData)
     ->rateLimit('api-calls', 60, 1) // 60 calls per minute
     ->through([
-        fn($data) => apiCall($data),
+        fn($data, $next) => $next(apiCall($data)),
     ])
     ->thenReturn();
 
@@ -70,7 +61,7 @@ $result = Flowpipe::make()
     ->send($userData)
     ->rateLimit('user-ops', 10, 1, fn($data) => $data['user_id'])
     ->through([
-        UserOperationStep::class,
+        fn($data, $next) => $next(userOperation($data)),
     ])
     ->thenReturn();
 ```
@@ -86,18 +77,7 @@ $result = Flowpipe::make()
     ->send($data)
     ->transform(fn($data) => strtoupper($data))
     ->thenReturn();
-
-// Array mapping
-$result = Flowpipe::make()
-    ->send($users)
-    ->through([
-        TransformStep::map(fn($user) => $user['email']),
-    ])
-    ->thenReturn();
-
-// Array filtering
-$result = Flowpipe::make()
-    ->send($users)
+```
     ->through([
         TransformStep::filter(fn($user) => $user['active']),
     ])
@@ -113,7 +93,7 @@ $result = Flowpipe::make()
 ```
 
 ### 5. Validation Step
-Validate data using Laravel's validation. If you pass a scalar (string, int, etc.) and only one rule, the value will be automatically wrapped and unwrapped for you:
+Validate data using Laravel's validation:
 
 ```php
 use Grazulex\LaravelFlowpipe\Steps\ValidationStep;
@@ -126,24 +106,14 @@ $result = Flowpipe::make()
         'name' => 'required|string|max:255',
     ])
     ->through([
-        ProcessUserStep::class,
+        fn($data, $next) => $next(array_merge($data, ['processed' => true])),
     ])
     ->thenReturn();
 
-// Example with scalar payload and one rule (returns validated value, not array)
+// Example with scalar payload and one rule
 $result = Flowpipe::make()
     ->send('foo@bar.com')
     ->validate(['email' => 'required|email'])
-    ->thenReturn(); // $result === 'foo@bar.com'
-
-// Helper methods
-$result = Flowpipe::make()
-    ->send($userData)
-    ->through([
-        ValidationStep::email('email'),
-        ValidationStep::required(['name', 'phone']),
-        ValidationStep::numeric('age', 18, 100),
-    ])
     ->thenReturn();
 ```
 
@@ -155,7 +125,7 @@ $result = Flowpipe::make()
     ->send($largeDataset)
     ->batch(50) // Process 50 items at a time
     ->through([
-        fn($batch) => processBatch($batch),
+        fn($batch, $next) => $next(processBatch($batch)),
     ])
     ->thenReturn();
 ```

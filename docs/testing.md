@@ -12,19 +12,22 @@ Laravel Flowpipe provides comprehensive testing utilities to help you test your 
 namespace Tests\Feature;
 
 use Grazulex\LaravelFlowpipe\Flowpipe;
-use Grazulex\LaravelFlowpipe\FlowContext;
+use Grazulex\LaravelFlowpipe\Tracer\TestTracer;
 use Tests\TestCase;
 
 class FlowpipeTest extends TestCase
 {
     public function test_basic_flow_execution()
     {
-        $context = new FlowContext(['user_id' => 1]);
+        $result = Flowpipe::make()
+            ->send(['user_id' => 1])
+            ->through([
+                fn($data, $next) => $next(array_merge($data, ['processed' => true])),
+            ])
+            ->thenReturn();
         
-        $result = Flowpipe::run('user-registration', $context);
-        
-        $this->assertTrue($result->isSuccess());
-        $this->assertArrayHasKey('user_created', $result->getData());
+        $this->assertTrue($result['processed']);
+        $this->assertEquals(1, $result['user_id']);
     }
 }
 ```
@@ -43,7 +46,6 @@ Use the `TestTracer` to capture flow execution details:
 namespace Tests\Feature;
 
 use Grazulex\LaravelFlowpipe\Flowpipe;
-use Grazulex\LaravelFlowpipe\FlowContext;
 use Grazulex\LaravelFlowpipe\Tracer\TestTracer;
 use Tests\TestCase;
 
@@ -52,62 +54,78 @@ class FlowExecutionTest extends TestCase
     public function test_flow_execution_with_tracing()
     {
         $tracer = new TestTracer();
-        $context = new FlowContext(['order_id' => 123]);
         
-        $result = Flowpipe::run('order-processing', $context, $tracer);
+        $result = Flowpipe::make()
+            ->send(['order_id' => 123])
+            ->through([
+                fn($data, $next) => $next(array_merge($data, ['validated' => true])),
+                fn($data, $next) => $next(array_merge($data, ['processed' => true])),
+            ])
+            ->withTracer($tracer)
+            ->thenReturn();
         
         // Assert flow completed successfully
-        $this->assertTrue($result->isSuccess());
+        $this->assertTrue($result['processed']);
         
         // Assert specific steps were executed
-        $this->assertTrue($tracer->wasStepExecuted('validate-order'));
-        $this->assertTrue($tracer->wasStepExecuted('process-payment'));
+        $this->assertEquals(2, $tracer->count());
+        $this->assertEquals('Closure', $tracer->firstStep());
+        $this->assertEquals('Closure', $tracer->lastStep());
         
-        // Assert step execution order
-        $this->assertEquals(1, $tracer->getStepExecutionOrder('validate-order'));
-        $this->assertEquals(2, $tracer->getStepExecutionOrder('process-payment'));
+        // Get all step names
+        $steps = $tracer->steps();
+        $this->assertCount(2, $steps);
         
-        // Assert step execution times
-        $this->assertGreaterThan(0, $tracer->getStepExecutionTime('validate-order'));
+        // Get all execution logs
+        $logs = $tracer->all();
+        $this->assertCount(2, $logs);
         
-        // Get full execution trace
-        $trace = $tracer->getTrace();
-        $this->assertCount(3, $trace);
+        // Check first log details
+        $firstLog = $logs[0];
+        $this->assertEquals('Closure', $firstLog['step']);
+        $this->assertEquals(['order_id' => 123], $firstLog['before']);
+        $this->assertEquals(['order_id' => 123, 'validated' => true], $firstLog['after']);
+        $this->assertIsFloat($firstLog['duration']);
     }
 }
 ```
 
-#### 2. Mock Steps
+#### 2. Custom Step Testing
 
-Create mock steps for testing:
+Create and test custom steps:
 
 ```php
 <?php
 
 namespace Tests\Unit;
 
-use Grazulex\LaravelFlowpipe\FlowContext;
-use Grazulex\LaravelFlowpipe\Steps\ClosureStep;
+use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
 use Grazulex\LaravelFlowpipe\Flowpipe;
 use Tests\TestCase;
 
-class MockStepTest extends TestCase
+class CustomStepTest extends TestCase
 {
-    public function test_flow_with_mock_steps()
+    public function test_custom_step_implementation()
     {
-        // Create a mock step using closure
-        $mockStep = new ClosureStep(function (FlowContext $context) {
-            $context->set('payment_processed', true);
-            return $context;
-        });
+        $step = new class implements FlowStep {
+            public function handle(mixed $payload, \Closure $next): mixed
+            {
+                if (!is_array($payload)) {
+                    throw new \InvalidArgumentException('Payload must be an array');
+                }
+                
+                $payload['custom_processed'] = true;
+                return $next($payload);
+            }
+        };
         
-        // Register the mock step
-        Flowpipe::registerStep('mock-payment', $mockStep);
+        $result = Flowpipe::make()
+            ->send(['data' => 'test'])
+            ->through([$step])
+            ->thenReturn();
         
-        $context = new FlowContext(['amount' => 100]);
-        $result = Flowpipe::run('payment-flow', $context);
-        
-        $this->assertTrue($result->get('payment_processed'));
+        $this->assertTrue($result['custom_processed']);
+        $this->assertEquals('test', $result['data']);
     }
 }
 ```
@@ -121,23 +139,41 @@ Test conditions in isolation:
 
 namespace Tests\Unit;
 
-use App\Flowpipe\Conditions\HasInventoryCondition;
-use Grazulex\LaravelFlowpipe\FlowContext;
+use Grazulex\LaravelFlowpipe\Contracts\Condition;
+use Grazulex\LaravelFlowpipe\Steps\ConditionalStep;
+use Grazulex\LaravelFlowpipe\Flowpipe;
 use Tests\TestCase;
 
 class ConditionTest extends TestCase
 {
     public function test_has_inventory_condition()
     {
-        $condition = new HasInventoryCondition();
+        $condition = new class implements Condition {
+            public function evaluate(mixed $payload): bool
+            {
+                return is_array($payload) && ($payload['inventory_count'] ?? 0) > 0;
+            }
+        };
         
         // Test with sufficient inventory
-        $context = new FlowContext(['inventory_count' => 10]);
-        $this->assertTrue($condition->evaluate($context));
+        $result = Flowpipe::make()
+            ->send(['inventory_count' => 10])
+            ->through([
+                ConditionalStep::when($condition, fn($data, $next) => $next(array_merge($data, ['has_inventory' => true])))
+            ])
+            ->thenReturn();
+        
+        $this->assertTrue($result['has_inventory']);
         
         // Test with insufficient inventory
-        $context = new FlowContext(['inventory_count' => 0]);
-        $this->assertFalse($condition->evaluate($context));
+        $result = Flowpipe::make()
+            ->send(['inventory_count' => 0])
+            ->through([
+                ConditionalStep::when($condition, fn($data, $next) => $next(array_merge($data, ['has_inventory' => true])))
+            ])
+            ->thenReturn();
+        
+        $this->assertFalse($result['has_inventory'] ?? false);
     }
 }
 ```
@@ -151,43 +187,76 @@ class ConditionTest extends TestCase
 
 namespace Tests\Unit;
 
-use App\Flowpipe\Steps\ValidateInputStep;
-use Grazulex\LaravelFlowpipe\FlowContext;
+use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
 use Tests\TestCase;
 
 class ValidateInputStepTest extends TestCase
 {
     public function test_validates_required_fields()
     {
-        $step = new ValidateInputStep();
+        $step = new class implements FlowStep {
+            public function handle(mixed $payload, \Closure $next): mixed
+            {
+                if (!is_array($payload)) {
+                    throw new \InvalidArgumentException('Payload must be an array');
+                }
+                
+                if (empty($payload['email']) || !filter_var($payload['email'], FILTER_VALIDATE_EMAIL)) {
+                    throw new \InvalidArgumentException('Valid email is required');
+                }
+                
+                if (empty($payload['password']) || strlen($payload['password']) < 8) {
+                    throw new \InvalidArgumentException('Password must be at least 8 characters');
+                }
+                
+                return $next(array_merge($payload, ['validation_passed' => true]));
+            }
+        };
         
         // Test with valid input
-        $context = new FlowContext([
-            'email' => 'user@example.com',
-            'password' => 'password123'
-        ]);
+        $result = Flowpipe::make()
+            ->send([
+                'email' => 'user@example.com',
+                'password' => 'password123'
+            ])
+            ->through([$step])
+            ->thenReturn();
         
-        $result = $step->handle($context);
-        
-        $this->assertTrue($result->get('validation_passed'));
-        $this->assertFalse($result->hasErrors());
+        $this->assertTrue($result['validation_passed']);
     }
     
     public function test_fails_with_invalid_input()
     {
-        $step = new ValidateInputStep();
+        $step = new class implements FlowStep {
+            public function handle(mixed $payload, \Closure $next): mixed
+            {
+                if (!is_array($payload)) {
+                    throw new \InvalidArgumentException('Payload must be an array');
+                }
+                
+                if (empty($payload['email']) || !filter_var($payload['email'], FILTER_VALIDATE_EMAIL)) {
+                    throw new \InvalidArgumentException('Valid email is required');
+                }
+                
+                if (empty($payload['password']) || strlen($payload['password']) < 8) {
+                    throw new \InvalidArgumentException('Password must be at least 8 characters');
+                }
+                
+                return $next(array_merge($payload, ['validation_passed' => true]));
+            }
+        };
         
         // Test with invalid input
-        $context = new FlowContext([
-            'email' => 'invalid-email',
-            'password' => ''
-        ]);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Valid email is required');
         
-        $result = $step->handle($context);
-        
-        $this->assertFalse($result->get('validation_passed'));
-        $this->assertTrue($result->hasErrors());
-        $this->assertContains('Invalid email format', $result->getErrors());
+        Flowpipe::make()
+            ->send([
+                'email' => 'invalid-email',
+                'password' => ''
+            ])
+            ->through([$step])
+            ->thenReturn();
     }
 }
 ```
@@ -200,9 +269,10 @@ class ValidateInputStepTest extends TestCase
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Flowpipe\Steps\CreateUserStep;
-use Grazulex\LaravelFlowpipe\FlowContext;
+use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
+use Grazulex\LaravelFlowpipe\Flowpipe;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class CreateUserStepTest extends TestCase
@@ -211,24 +281,43 @@ class CreateUserStepTest extends TestCase
     
     public function test_creates_user_in_database()
     {
-        $step = new CreateUserStep();
+        $step = new class implements FlowStep {
+            public function handle(mixed $payload, \Closure $next): mixed
+            {
+                if (!is_array($payload)) {
+                    throw new \InvalidArgumentException('Payload must be an array');
+                }
+                
+                $user = User::create([
+                    'name' => $payload['name'],
+                    'email' => $payload['email'],
+                    'password' => Hash::make($payload['password']),
+                ]);
+                
+                return $next(array_merge($payload, [
+                    'user_id' => $user->id,
+                    'user_created' => true
+                ]));
+            }
+        };
         
-        $context = new FlowContext([
-            'email' => 'user@example.com',
-            'password' => 'password123',
-            'name' => 'John Doe'
-        ]);
+        $result = Flowpipe::make()
+            ->send([
+                'email' => 'user@example.com',
+                'password' => 'password123',
+                'name' => 'John Doe'
+            ])
+            ->through([$step])
+            ->thenReturn();
         
-        $result = $step->handle($context);
-        
-        $this->assertTrue($result->get('user_created'));
+        $this->assertTrue($result['user_created']);
         $this->assertDatabaseHas('users', [
             'email' => 'user@example.com',
             'name' => 'John Doe'
         ]);
         
         $user = User::where('email', 'user@example.com')->first();
-        $this->assertEquals($user->id, $result->get('user_id'));
+        $this->assertEquals($user->id, $result['user_id']);
     }
 }
 ```
@@ -243,9 +332,10 @@ class CreateUserStepTest extends TestCase
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\Product;
 use App\Models\Order;
+use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
 use Grazulex\LaravelFlowpipe\Flowpipe;
-use Grazulex\LaravelFlowpipe\FlowContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -259,17 +349,59 @@ class OrderProcessingFlowTest extends TestCase
         $user = User::factory()->create();
         $product = Product::factory()->create(['stock' => 10]);
         
-        $context = new FlowContext([
-            'user_id' => $user->id,
-            'product_id' => $product->id,
-            'quantity' => 2,
-            'payment_method' => 'credit_card'
-        ]);
+        // Create flow steps
+        $validateStep = new class implements FlowStep {
+            public function handle(mixed $payload, \Closure $next): mixed
+            {
+                $product = Product::find($payload['product_id']);
+                if ($product->stock < $payload['quantity']) {
+                    throw new \InvalidArgumentException('Insufficient inventory');
+                }
+                return $next(array_merge($payload, ['validated' => true]));
+            }
+        };
         
-        $result = Flowpipe::run('order-processing', $context);
+        $createOrderStep = new class implements FlowStep {
+            public function handle(mixed $payload, \Closure $next): mixed
+            {
+                $order = Order::create([
+                    'user_id' => $payload['user_id'],
+                    'product_id' => $payload['product_id'],
+                    'quantity' => $payload['quantity'],
+                    'status' => 'completed',
+                ]);
+                
+                return $next(array_merge($payload, ['order_id' => $order->id]));
+            }
+        };
+        
+        $updateInventoryStep = new class implements FlowStep {
+            public function handle(mixed $payload, \Closure $next): mixed
+            {
+                $product = Product::find($payload['product_id']);
+                $product->update(['stock' => $product->stock - $payload['quantity']]);
+                
+                return $next(array_merge($payload, ['inventory_updated' => true]));
+            }
+        };
+        
+        $result = Flowpipe::make()
+            ->send([
+                'user_id' => $user->id,
+                'product_id' => $product->id,
+                'quantity' => 2,
+                'payment_method' => 'credit_card'
+            ])
+            ->through([
+                $validateStep,
+                $createOrderStep,
+                $updateInventoryStep,
+            ])
+            ->thenReturn();
         
         // Assert flow completed successfully
-        $this->assertTrue($result->isSuccess());
+        $this->assertTrue($result['validated']);
+        $this->assertTrue($result['inventory_updated']);
         
         // Assert order was created
         $this->assertDatabaseHas('orders', [
@@ -281,9 +413,8 @@ class OrderProcessingFlowTest extends TestCase
         $product->refresh();
         $this->assertEquals(8, $product->stock);
         
-        // Assert context contains expected data
-        $this->assertArrayHasKey('order_id', $result->getData());
-        $this->assertArrayHasKey('payment_id', $result->getData());
+        // Assert result contains expected data
+        $this->assertArrayHasKey('order_id', $result);
     }
     
     public function test_order_processing_with_insufficient_inventory()
@@ -291,17 +422,29 @@ class OrderProcessingFlowTest extends TestCase
         $user = User::factory()->create();
         $product = Product::factory()->create(['stock' => 1]);
         
-        $context = new FlowContext([
-            'user_id' => $user->id,
-            'product_id' => $product->id,
-            'quantity' => 5, // More than available
-            'payment_method' => 'credit_card'
-        ]);
+        $validateStep = new class implements FlowStep {
+            public function handle(mixed $payload, \Closure $next): mixed
+            {
+                $product = Product::find($payload['product_id']);
+                if ($product->stock < $payload['quantity']) {
+                    throw new \InvalidArgumentException('Insufficient inventory');
+                }
+                return $next(array_merge($payload, ['validated' => true]));
+            }
+        };
         
-        $result = Flowpipe::run('order-processing', $context);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Insufficient inventory');
         
-        // Assert flow failed
-        $this->assertFalse($result->isSuccess());
+        Flowpipe::make()
+            ->send([
+                'user_id' => $user->id,
+                'product_id' => $product->id,
+                'quantity' => 5, // More than available
+                'payment_method' => 'credit_card'
+            ])
+            ->through([$validateStep])
+            ->thenReturn();
         
         // Assert no order was created
         $this->assertDatabaseMissing('orders', [
@@ -324,8 +467,7 @@ class OrderProcessingFlowTest extends TestCase
 
 namespace Tests\Feature;
 
-use App\Flowpipe\Steps\PaymentStep;
-use Grazulex\LaravelFlowpipe\FlowContext;
+use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
 use Grazulex\LaravelFlowpipe\Flowpipe;
 use Tests\TestCase;
 
@@ -333,30 +475,35 @@ class ErrorHandlingTest extends TestCase
 {
     public function test_flow_handles_step_exceptions()
     {
-        // Mock a step that throws an exception
-        $mockStep = new class implements \Grazulex\LaravelFlowpipe\Contracts\FlowStep {
-            public function handle(FlowContext $context): FlowContext
+        $failingStep = new class implements FlowStep {
+            public function handle(mixed $payload, \Closure $next): mixed
             {
                 throw new \Exception('Payment failed');
             }
         };
         
-        Flowpipe::registerStep('failing-payment', $mockStep);
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Payment failed');
         
-        $context = new FlowContext(['amount' => 100]);
-        $result = Flowpipe::run('payment-flow', $context);
-        
-        $this->assertFalse($result->isSuccess());
-        $this->assertContains('Payment failed', $result->getErrors());
+        Flowpipe::make()
+            ->send(['amount' => 100])
+            ->through([$failingStep])
+            ->thenReturn();
     }
     
-    public function test_flow_continues_after_recoverable_error()
+    public function test_flow_with_retry_step()
     {
-        $context = new FlowContext(['retry_count' => 3]);
-        $result = Flowpipe::run('resilient-flow', $context);
+        $result = Flowpipe::make()
+            ->send(['data' => 'test'])
+            ->retry(3, 100, function ($exception) {
+                return $exception instanceof \RuntimeException;
+            })
+            ->through([
+                fn($data, $next) => $next(array_merge($data, ['processed' => true])),
+            ])
+            ->thenReturn();
         
-        $this->assertTrue($result->isSuccess());
-        $this->assertGreaterThan(0, $result->get('retry_attempts'));
+        $this->assertTrue($result['processed']);
     }
 }
 ```
@@ -371,37 +518,45 @@ class ErrorHandlingTest extends TestCase
 namespace Tests\Performance;
 
 use Grazulex\LaravelFlowpipe\Flowpipe;
-use Grazulex\LaravelFlowpipe\FlowContext;
 use Tests\TestCase;
 
 class FlowPerformanceTest extends TestCase
 {
     public function test_flow_execution_performance()
     {
-        $context = new FlowContext(['items' => range(1, 1000)]);
-        
         $startTime = microtime(true);
-        $result = Flowpipe::run('batch-processing', $context);
-        $endTime = microtime(true);
         
+        $result = Flowpipe::make()
+            ->send(['items' => range(1, 1000)])
+            ->through([
+                fn($data, $next) => $next(array_merge($data, ['processed' => true])),
+                fn($data, $next) => $next(array_merge($data, ['validated' => true])),
+            ])
+            ->thenReturn();
+        
+        $endTime = microtime(true);
         $executionTime = $endTime - $startTime;
         
-        $this->assertTrue($result->isSuccess());
-        $this->assertLessThan(5.0, $executionTime, 'Flow should complete within 5 seconds');
+        $this->assertTrue($result['processed']);
+        $this->assertLessThan(1.0, $executionTime, 'Flow should complete within 1 second');
     }
     
     public function test_flow_memory_usage()
     {
         $memoryBefore = memory_get_usage();
         
-        $context = new FlowContext(['large_dataset' => str_repeat('data', 10000)]);
-        $result = Flowpipe::run('memory-intensive-flow', $context);
+        $result = Flowpipe::make()
+            ->send(['large_dataset' => str_repeat('data', 10000)])
+            ->through([
+                fn($data, $next) => $next(array_merge($data, ['processed' => true])),
+            ])
+            ->thenReturn();
         
         $memoryAfter = memory_get_usage();
         $memoryUsed = $memoryAfter - $memoryBefore;
         
-        $this->assertTrue($result->isSuccess());
-        $this->assertLessThan(50 * 1024 * 1024, $memoryUsed, 'Flow should use less than 50MB');
+        $this->assertTrue($result['processed']);
+        $this->assertLessThan(10 * 1024 * 1024, $memoryUsed, 'Flow should use less than 10MB');
     }
 }
 ```
@@ -415,50 +570,60 @@ class FlowPerformanceTest extends TestCase
 
 namespace Tests\Unit;
 
-use Grazulex\LaravelFlowpipe\FlowContext;
+use Grazulex\LaravelFlowpipe\Flowpipe;
 use Tests\TestCase;
 
 class TestDataFactoryTest extends TestCase
 {
-    protected function createUserRegistrationContext(array $overrides = []): FlowContext
+    protected function createUserRegistrationData(array $overrides = []): array
     {
-        $data = array_merge([
+        return array_merge([
             'email' => 'user@example.com',
             'password' => 'password123',
             'name' => 'John Doe',
             'terms_accepted' => true,
         ], $overrides);
-        
-        return new FlowContext($data);
     }
     
-    protected function createOrderContext(array $overrides = []): FlowContext
+    protected function createOrderData(array $overrides = []): array
     {
-        $data = array_merge([
+        return array_merge([
             'user_id' => 1,
             'product_id' => 1,
             'quantity' => 1,
             'payment_method' => 'credit_card',
             'shipping_address' => '123 Main St',
         ], $overrides);
-        
-        return new FlowContext($data);
     }
     
     public function test_user_registration_flow()
     {
-        $context = $this->createUserRegistrationContext();
-        $result = Flowpipe::run('user-registration', $context);
+        $data = $this->createUserRegistrationData();
         
-        $this->assertTrue($result->isSuccess());
+        $result = Flowpipe::make()
+            ->send($data)
+            ->through([
+                fn($data, $next) => $next(array_merge($data, ['processed' => true])),
+            ])
+            ->thenReturn();
+        
+        $this->assertTrue($result['processed']);
+        $this->assertEquals('user@example.com', $result['email']);
     }
     
     public function test_order_processing_flow()
     {
-        $context = $this->createOrderContext(['quantity' => 5]);
-        $result = Flowpipe::run('order-processing', $context);
+        $data = $this->createOrderData(['quantity' => 5]);
         
-        $this->assertTrue($result->isSuccess());
+        $result = Flowpipe::make()
+            ->send($data)
+            ->through([
+                fn($data, $next) => $next(array_merge($data, ['validated' => true])),
+            ])
+            ->thenReturn();
+        
+        $this->assertTrue($result['validated']);
+        $this->assertEquals(5, $result['quantity']);
     }
 }
 ```
@@ -496,12 +661,10 @@ class TestDataFactoryTest extends TestCase
 // config/flowpipe.php (testing environment)
 return [
     'definitions_path' => 'tests/fixtures/flows',
-    'trace_enabled' => true,
-    'cache_enabled' => false,
-    'validation_enabled' => true,
-    'performance' => [
-        'max_steps' => 50,
-        'timeout' => 10,
+    'step_namespace' => 'Tests\\Fixtures\\Steps',
+    'tracing' => [
+        'enabled' => true,
+        'default' => \Grazulex\LaravelFlowpipe\Tracer\TestTracer::class,
     ],
 ];
 ```
@@ -522,7 +685,7 @@ tests/
 │   │   └── CreateUserStepTest.php
 │   ├── Conditions/
 │   │   └── HasInventoryConditionTest.php
-│   └── FlowContextTest.php
+│   └── TracerTest.php
 ├── Performance/
 │   └── FlowPerformanceTest.php
 └── fixtures/
@@ -549,9 +712,9 @@ public function test_condition()
 
 ```php
 // Specific assertions
-$this->assertTrue($result->isSuccess());
-$this->assertArrayHasKey('user_id', $result->getData());
-$this->assertEquals('completed', $result->get('status'));
+$this->assertTrue($result['processed']);
+$this->assertArrayHasKey('user_id', $result);
+$this->assertEquals('completed', $result['status']);
 
 // Avoid generic assertions
 $this->assertNotNull($result);
@@ -566,10 +729,10 @@ $user = User::factory()->create();
 $order = Order::factory()->create(['user_id' => $user->id]);
 
 // Use builders for simple data
-$context = new FlowContext([
+$data = [
     'email' => 'test@example.com',
     'amount' => 100,
-]);
+];
 ```
 
 ## Continuous Integration
@@ -592,7 +755,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.1'
+        php-version: '8.3'
         
     - name: Install dependencies
       run: composer install --no-progress --prefer-dist --optimize-autoloader
@@ -604,4 +767,63 @@ jobs:
       uses: codecov/codecov-action@v3
 ```
 
-This comprehensive testing guide covers all aspects of testing Laravel Flowpipe flows, from unit tests to integration tests and performance testing.
+## Advanced Testing Scenarios
+
+### Testing with Batch Processing
+
+```php
+public function test_batch_processing_flow()
+{
+    $items = range(1, 100);
+    
+    $result = Flowpipe::make()
+        ->send(['items' => $items])
+        ->batch(10)
+        ->through([
+            fn($data, $next) => $next(array_merge($data, ['processed' => true])),
+        ])
+        ->thenReturn();
+    
+    $this->assertTrue($result['processed']);
+    $this->assertCount(100, $result['items']);
+}
+```
+
+### Testing with Caching
+
+```php
+public function test_flow_with_caching()
+{
+    $result = Flowpipe::make()
+        ->send(['data' => 'test'])
+        ->cache('test-key', 300)
+        ->through([
+            fn($data, $next) => $next(array_merge($data, ['cached' => true])),
+        ])
+        ->thenReturn();
+    
+    $this->assertTrue($result['cached']);
+}
+```
+
+### Testing with Validation
+
+```php
+public function test_flow_with_validation()
+{
+    $result = Flowpipe::make()
+        ->send(['email' => 'test@example.com', 'name' => 'John'])
+        ->validate([
+            'email' => 'required|email',
+            'name' => 'required|string',
+        ])
+        ->through([
+            fn($data, $next) => $next(array_merge($data, ['validated' => true])),
+        ])
+        ->thenReturn();
+    
+    $this->assertTrue($result['validated']);
+}
+```
+
+This comprehensive testing guide covers all aspects of testing Laravel Flowpipe flows using the actual implementation, from unit tests to integration tests and performance testing.
