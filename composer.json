@@ -64,7 +64,6 @@
     "support": {
         "issues": "https://github.com/Grazulex/laravel-flowpipe/issues",
         "source": "https://github.com/Grazulex/laravel-flowpipe",
-        "wiki": "https://github.com/Grazulex/laravel-flowpipe/wiki",
         "forum": "https://github.com/Grazulex/laravel-flowpipe/discussions",
         "docs": "https://github.com/Grazulex/laravel-flowpipe#readme"
     },
