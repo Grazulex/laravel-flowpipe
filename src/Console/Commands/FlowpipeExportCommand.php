@@ -11,15 +11,16 @@ use RuntimeException;
 
 final class FlowpipeExportCommand extends Command
 {
-    protected $signature = 'flowpipe:export {flow : The name of the flow to export} {--format=json : Export format (json|mermaid|md)} {--output= : Output file path (optional)}';
+    protected $signature = 'flowpipe:export {flow : The name of the flow or group to export} {--format=json : Export format (json|mermaid|md)} {--output= : Output file path (optional)} {--type=flow : Type to export (flow|group)}';
 
-    protected $description = 'Export a flow definition to JSON, Mermaid, or Markdown format';
+    protected $description = 'Export a flow or group definition to JSON, Mermaid, or Markdown format';
 
     public function handle(): void
     {
         $flowName = $this->argument('flow');
         $format = $this->option('format');
         $outputPath = $this->option('output');
+        $type = $this->option('type');
 
         if (! in_array($format, ['json', 'mermaid', 'md'])) {
             $this->error('Invalid format. Supported formats: json, mermaid, md');
@@ -27,16 +28,27 @@ final class FlowpipeExportCommand extends Command
             return;
         }
 
+        if (! in_array($type, ['flow', 'group'])) {
+            $this->error('Invalid type. Supported types: flow, group');
+
+            return;
+        }
+
         try {
             $registry = new FlowDefinitionRegistry();
-            $definition = $registry->get($flowName);
 
-            $this->info("Exporting flow: <comment>{$flowName}</comment> to <comment>{$format}</comment> format");
+            if ($type === 'group') {
+                $definition = $registry->getGroup($flowName);
+                $this->info("Exporting group: <comment>{$flowName}</comment> to <comment>{$format}</comment> format");
+            } else {
+                $definition = $registry->get($flowName);
+                $this->info("Exporting flow: <comment>{$flowName}</comment> to <comment>{$format}</comment> format");
+            }
 
             $exportedContent = match ($format) {
                 'json' => $this->exportToJson($definition),
-                'mermaid' => $this->exportToMermaid($definition, $flowName),
-                'md' => $this->exportToMarkdown($definition, $flowName),
+                'mermaid' => $this->exportToMermaid($definition, $flowName, $type),
+                'md' => $this->exportToMarkdown($definition, $flowName, $type),
                 default => throw new RuntimeException("Unsupported format: {$format}")
             };
 
@@ -65,10 +77,11 @@ final class FlowpipeExportCommand extends Command
         return json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
-    private function exportToMermaid(array $definition, string $flowName): string
+    private function exportToMermaid(array $definition, string $flowName, string $type = 'flow'): string
     {
         $mermaid = "flowchart TD\n";
-        $mermaid .= "    Start([Start: {$flowName}])\n";
+        $title = $type === 'group' ? "Group: {$flowName}" : "Flow: {$flowName}";
+        $mermaid .= "    Start([Start: {$title}])\n";
 
         $previousNode = 'Start';
 
@@ -126,13 +139,15 @@ final class FlowpipeExportCommand extends Command
         return $mermaid."    {$previousNode} --> End\n";
     }
 
-    private function exportToMarkdown(array $definition, string $flowName): string
+    private function exportToMarkdown(array $definition, string $flowName, string $type = 'flow'): string
     {
-        $markdown = "# Flow Documentation: {$flowName}\n\n";
+        $typeTitle = $type === 'group' ? 'Group' : 'Flow';
+        $markdown = "# {$typeTitle} Documentation: {$flowName}\n\n";
 
         // Basic Information
         $markdown .= "## 📋 Basic Information\n\n";
-        $markdown .= "- **Flow Name**: `{$flowName}`\n";
+        $markdown .= "- **{$typeTitle} Name**: `{$flowName}`\n";
+        $markdown .= "- **Type**: `{$type}`\n";
         $markdown .= '- **Description**: '.($definition['description'] ?? 'No description provided')."\n";
         $markdown .= '- **Generated**: '.date('Y-m-d H:i:s')."\n\n";
 
@@ -156,9 +171,10 @@ final class FlowpipeExportCommand extends Command
         $markdown .= '- **Has Initial Payload**: '.(isset($definition['send']) ? 'Yes' : 'No')."\n\n";
 
         // Flow Visualization
-        $markdown .= "## 🌊 Flow Visualization\n\n";
+        $typeTitle = $type === 'group' ? 'Group' : 'Flow';
+        $markdown .= "## 🌊 {$typeTitle} Visualization\n\n";
         $markdown .= "```mermaid\n";
-        $markdown .= $this->exportToMermaid($definition, $flowName);
+        $markdown .= $this->exportToMermaid($definition, $flowName, $type);
         $markdown .= "\n```\n\n";
 
         // Detailed Steps

@@ -33,6 +33,36 @@ final class FlowBuilder
         return $flowpipe;
     }
 
+    public function buildStep(array $stepDefinition): mixed
+    {
+        // Handle direct step reference (step: ClassName)
+        if (isset($stepDefinition['step'])) {
+            return $this->buildStepFromClass($stepDefinition['step']);
+        }
+
+        // Handle condition with nested flow
+        if (isset($stepDefinition['condition'])) {
+            return $this->buildConditionalStep($stepDefinition);
+        }
+
+        // Handle legacy type-based steps
+        $type = $stepDefinition['type'] ?? null;
+
+        if (! $type) {
+            throw new RuntimeException('Step definition must contain either "step", "condition", or "type" field');
+        }
+
+        return match ($type) {
+            'closure' => $this->buildClosureStep($stepDefinition),
+            'conditional' => $this->buildConditionalStep($stepDefinition),
+            'class' => $this->buildClassStep($stepDefinition),
+            'step' => $this->buildClassStep($stepDefinition),
+            'group' => $this->buildGroupStep($stepDefinition),
+            'nested' => $this->buildNestedStep($stepDefinition),
+            default => throw new RuntimeException("Unknown step type: {$type}")
+        };
+    }
+
     private function appendValueStatic(mixed $payload, string $value): mixed
     {
         if (is_string($payload)) {
@@ -67,33 +97,6 @@ final class FlowBuilder
         }
 
         return $value.$payload;
-    }
-
-    private function buildStep(array $stepDefinition): mixed
-    {
-        // Handle direct step reference (step: ClassName)
-        if (isset($stepDefinition['step'])) {
-            return $this->buildStepFromClass($stepDefinition['step']);
-        }
-
-        // Handle condition with nested flow
-        if (isset($stepDefinition['condition'])) {
-            return $this->buildConditionalStep($stepDefinition);
-        }
-
-        // Handle legacy type-based steps
-        $type = $stepDefinition['type'] ?? null;
-
-        if (! $type) {
-            throw new RuntimeException('Step definition must contain either "step", "condition", or "type" field');
-        }
-
-        return match ($type) {
-            'closure' => $this->buildClosureStep($stepDefinition),
-            'conditional' => $this->buildConditionalStep($stepDefinition),
-            'class' => $this->buildClassStep($stepDefinition),
-            default => throw new RuntimeException("Unknown step type: {$type}")
-        };
     }
 
     private function buildClosureStep(array $stepDefinition): Closure
@@ -181,15 +184,42 @@ final class FlowBuilder
         return [$this->buildStep($definition)];
     }
 
-    private function buildClassStep(array $stepDefinition): string
+    private function buildGroupStep(array $stepDefinition): string
     {
-        $class = $stepDefinition['class'] ?? null;
+        $name = $stepDefinition['name'] ?? null;
 
-        if (! $class) {
-            throw new RuntimeException('Class step must have a "class" field');
+        if (! $name) {
+            throw new RuntimeException('Group step must have a "name" field');
         }
 
-        return $class;
+        return $name; // This will be resolved by StepResolver as a group
+    }
+
+    private function buildNestedStep(array $stepDefinition): \Grazulex\LaravelFlowpipe\Steps\NestedFlowStep
+    {
+        $steps = $stepDefinition['steps'] ?? null;
+
+        if (! $steps) {
+            throw new RuntimeException('Nested step must have a "steps" field');
+        }
+
+        $nestedSteps = [];
+        foreach ($steps as $step) {
+            $nestedSteps[] = $this->buildStep($step);
+        }
+
+        return new \Grazulex\LaravelFlowpipe\Steps\NestedFlowStep($nestedSteps);
+    }
+
+    private function buildClassStep(array $stepDefinition): string
+    {
+        $class = $stepDefinition['class'] ?? $stepDefinition['step'] ?? null;
+
+        if (! $class) {
+            throw new RuntimeException('Class step must have a "class" or "step" field');
+        }
+
+        return $this->buildStepFromClass($class);
     }
 
     private function buildConditionObject(array|string $condition): \Grazulex\LaravelFlowpipe\Contracts\Condition

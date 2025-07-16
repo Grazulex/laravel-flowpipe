@@ -1,0 +1,12 @@
+# Example: Notification Group
+# File: flow_definitions/groups/notifications.yaml
+
+group: notifications
+description: Sends various notifications
+steps:
+  - type: step
+    class: SendEmailStep
+  - type: step
+    class: SendSmsStep
+  - type: step
+    class: LogNotificationStep

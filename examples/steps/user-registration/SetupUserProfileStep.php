@@ -4,22 +4,25 @@ declare(strict_types=1);
 
 namespace Examples\Steps\UserRegistration;
 
+use Closure;
 use Exception;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
+use RuntimeException;
 
 final class SetupUserProfileStep implements FlowStep
 {
-    public function handle(mixed $payload, \Closure $next): mixed
+    public function handle(mixed $payload, Closure $next): mixed
     {
-        if (!is_array($payload)) {
-            throw new \InvalidArgumentException('Payload must be an array');
+        if (! is_array($payload)) {
+            throw new InvalidArgumentException('Payload must be an array');
         }
 
         $userId = $payload['id'] ?? null;
 
-        if (!$userId) {
-            throw new \InvalidArgumentException('User ID is required to setup profile');
+        if (! $userId) {
+            throw new InvalidArgumentException('User ID is required to setup profile');
         }
 
         try {
@@ -51,7 +54,7 @@ final class SetupUserProfileStep implements FlowStep
             return $next($payload);
 
         } catch (Exception $e) {
-            throw new \RuntimeException('Failed to setup user profile: ' . $e->getMessage());
+            throw new RuntimeException('Failed to setup user profile: '.$e->getMessage());
         }
     }
 }

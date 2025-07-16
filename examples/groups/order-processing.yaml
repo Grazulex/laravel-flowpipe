@@ -1,0 +1,14 @@
+# Example: Order Processing Group
+# File: flow_definitions/groups/order-processing.yaml
+
+group: order-processing
+description: Processes e-commerce orders
+steps:
+  - type: step
+    class: ValidateOrderStep
+  - type: step
+    class: ProcessPaymentStep
+  - type: step
+    class: UpdateInventoryStep
+  - type: step
+    class: CreateOrderStep

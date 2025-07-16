@@ -1,0 +1,12 @@
+# Example: User Validation Group
+# File: flow_definitions/groups/user-validation.yaml
+
+group: user-validation
+description: Validates user input data
+steps:
+  - type: step
+    class: ValidateEmailStep
+  - type: step
+    class: CheckUserExistsStep
+  - type: step
+    class: ValidatePasswordStep

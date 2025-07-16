@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace Examples\Steps\UserRegistration;
 
+use Closure;
 use Exception;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
+use RuntimeException;
 
 final class CreateUserAccountStep implements FlowStep
 {
-    public function handle(mixed $payload, \Closure $next): mixed
+    public function handle(mixed $payload, Closure $next): mixed
     {
-        if (!is_array($payload)) {
-            throw new \InvalidArgumentException('Payload must be an array');
+        if (! is_array($payload)) {
+            throw new InvalidArgumentException('Payload must be an array');
         }
 
         try {
@@ -39,7 +42,7 @@ final class CreateUserAccountStep implements FlowStep
             return $next($userData);
 
         } catch (Exception $e) {
-            throw new \RuntimeException('Failed to create user account: ' . $e->getMessage());
+            throw new RuntimeException('Failed to create user account: '.$e->getMessage());
         }
     }
 }

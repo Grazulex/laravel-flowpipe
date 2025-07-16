@@ -39,4 +39,64 @@ final class FlowDefinitionRegistry
 
         return Yaml::parseFile($file);
     }
+
+    public function loadGroups(): void
+    {
+        $groupsPath = $this->path.'/groups';
+
+        if (! File::exists($groupsPath)) {
+            return;
+        }
+
+        collect(File::files($groupsPath))
+            ->filter(fn ($f): bool => str_ends_with($f->getFilename(), '.yaml'))
+            ->each(function ($file): void {
+                $name = $file->getFilenameWithoutExtension();
+                $definition = Yaml::parseFile($file->getPathname());
+
+                if (isset($definition['group']) && isset($definition['steps'])) {
+                    // Convert step definitions to actual steps using FlowBuilder
+                    $builder = new \Grazulex\LaravelFlowpipe\Support\FlowBuilder();
+                    $steps = [];
+
+                    foreach ($definition['steps'] as $stepDef) {
+                        $steps[] = $builder->buildStep($stepDef);
+                    }
+
+                    \Grazulex\LaravelFlowpipe\Support\FlowGroupRegistry::register(
+                        $definition['group'],
+                        $steps
+                    );
+                }
+            });
+    }
+
+    public function listGroups(): Collection
+    {
+        $groupsPath = $this->path.'/groups';
+
+        if (! File::exists($groupsPath)) {
+            return collect();
+        }
+
+        return collect(File::files($groupsPath))
+            ->filter(fn ($f): bool => str_ends_with($f->getFilename(), '.yaml'))
+            ->map(fn ($f): string => $f->getFilenameWithoutExtension());
+    }
+
+    public function getGroup(string $name): array
+    {
+        $file = $this->path.'/groups/'.$name.'.yaml';
+
+        if (! file_exists($file)) {
+            throw new RuntimeException("Group definition [$name] not found.");
+        }
+
+        return Yaml::parseFile($file);
+    }
+
+    public function getPath(): string
+    {
+        return $this->path;
+    }
 }
