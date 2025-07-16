@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Fixtures\Steps;
+namespace Tests\Fixtures\Classes\Steps;
 
 use Closure;
 use Exception;
