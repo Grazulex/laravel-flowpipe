@@ -20,6 +20,10 @@ final class FlowDefinitionRegistry
 
     public function list(): Collection
     {
+        if (!File::exists($this->path)) {
+            return collect();
+        }
+        
         return collect(File::files($this->path))
             ->filter(fn ($f): bool => str_ends_with($f->getFilename(), '.yaml'))
             ->map(fn ($f): string => $f->getFilenameWithoutExtension());

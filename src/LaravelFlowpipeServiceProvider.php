@@ -14,7 +14,7 @@ final class LaravelFlowpipeServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/Config/flowpipe.php' => config_path('dto.php'),
+            __DIR__.'/Config/flowpipe.php' => config_path('flowpipe.php'),
         ], 'flowpipe-config');
     }
 
