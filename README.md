@@ -248,10 +248,14 @@ php artisan flowpipe:list --detailed
 # Run a flow
 php artisan flowpipe:run user_processing
 
-# Export flows to different formats
+# Export flows to different formats with enhanced group colors
 php artisan flowpipe:export user_processing --format=json
 php artisan flowpipe:export user_processing --format=mermaid
 php artisan flowpipe:export user_processing --format=md --output=docs/user_processing.md
+
+# Export groups with enhanced color styling
+php artisan flowpipe:export user-validation --type=group --format=mermaid
+php artisan flowpipe:export notifications --type=group --format=md
 
 # Create new flows
 php artisan flowpipe:make-flow NewUserFlow --template=basic
@@ -261,6 +265,19 @@ php artisan flowpipe:make-flow AdvancedFlow --template=advanced
 # Generate step classes
 php artisan flowpipe:make-step ProcessUserStep
 ```
+
+### Enhanced Mermaid Export with Group Colors
+
+Laravel Flowpipe now supports enhanced Mermaid diagrams with rich color coding for different step types:
+
+- **Groups**: Blue theme (📦 Group elements)
+- **Nested Flows**: Green theme (🔄 Nested elements)
+- **Conditional Steps**: Orange theme (❓ Conditional elements)
+- **Transform Steps**: Pink theme (🔄 Transform elements)
+- **Validation Steps**: Green theme (✅ Validation elements)
+- **Cache Steps**: Yellow theme (💾 Cache elements)
+- **Batch Steps**: Purple theme (📊 Batch elements)
+- **Retry Steps**: Red theme (🔄 Retry elements)
 
 ## Documentation
 
