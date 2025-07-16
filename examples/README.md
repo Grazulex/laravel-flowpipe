@@ -1,6 +1,6 @@
 # Examples
 
-This directory contains practical examples of using Laravel Flowpipe in real-world scenarios, with special focus on **Step Groups**, **Nested Flows**, and the new **Enhanced Mermaid Export with Color Coding** features.
+This directory contains practical examples of using Laravel Flowpipe in real-world scenarios, with special focus on **Error Handling Strategies**, **Step Groups**, **Nested Flows**, and the new **Enhanced Mermaid Export with Color Coding** features.
 
 ## Directory Structure
 
@@ -10,10 +10,106 @@ examples/
 ├── groups/          # Example group definitions (YAML)
 ├── steps/           # Example step implementations
 ├── conditions/      # Example condition implementations
-├── groups-and-nested-flows.md  # Comprehensive guide
+├── error-handling-comprehensive.php      # Comprehensive error handling examples
+├── advanced-error-handling.php          # Advanced error handling patterns
+├── groups-and-nested-flows.md          # Comprehensive guide
 ├── ecommerce-order-processing-groups.php  # PHP example
 ├── user-registration-groups.php           # PHP example
 └── README.md        # This file
+```
+
+## Featured Examples
+
+### 1. Comprehensive Error Handling Patterns
+
+**File**: `error-handling-comprehensive.php`
+
+This example demonstrates real-world error handling scenarios including:
+- **E-commerce Order Processing**: Complete order flow with payment retry, inventory compensation, and email fallback
+- **User Registration**: Multi-step registration with service fallbacks and rollback strategies
+- **File Processing**: Large file processing with retry mechanisms and cleanup compensation
+- **API Integration**: Circuit breaker pattern with primary/secondary API fallback
+- **Database Operations**: Saga pattern with automatic compensation
+
+**Key Features**:
+- Retry strategies (exponential backoff, linear backoff, custom logic)
+- Fallback mechanisms (default values, cached data, alternative services)
+- Compensation patterns (rollback, cleanup, resource release)
+- Composite strategies (multi-layered error handling)
+- Exception-specific handling
+
+### 2. Advanced Error Handling Patterns
+
+**File**: `advanced-error-handling.php`
+
+Advanced patterns demonstrating:
+- Custom retry strategies with conditional logic
+- Multi-step workflows with different error handling per step
+- Monitoring and logging integration
+- Performance-aware error handling
+- Production-ready error handling templates
+
+## Error Handling Strategy Overview
+
+### Available Strategies
+
+🔄 **Retry Strategies**
+- `exponentialBackoff()` - Exponential backoff with configurable multiplier
+- `linearBackoff()` - Linear delay increase
+- `withRetryStrategy()` - Custom retry logic
+- `fallbackOnException()` - Exception-specific retry
+
+🛡️ **Fallback Strategies**
+- `withFallback()` - Generic fallback handler
+- `fallbackOnException()` - Exception-specific fallback
+- Default values, cached data, alternative services
+
+🔧 **Compensation Strategies**
+- `withCompensation()` - Generic compensation handler
+- `compensateOnException()` - Exception-specific compensation
+- Rollback, cleanup, resource release
+
+🎯 **Composite Strategies**
+- `withCompositeErrorHandler()` - Combine multiple strategies
+- `withErrorHandler()` - Use custom error handler
+- Multi-layered error handling
+
+### Real-World Use Cases
+
+**E-commerce**:
+```php
+// Order processing with comprehensive error handling
+$result = Flowpipe::make()
+    ->send($orderData)
+    ->exponentialBackoff(3, 200, 2.0)  // Retry payment
+    ->withFallback(fn($payload, $error) => useAlternativePayment($payload))
+    ->withCompensation(fn($payload, $error) => refundPayment($payload))
+    ->through($orderSteps)
+    ->thenReturn();
+```
+
+**Microservices**:
+```php
+// Circuit breaker pattern
+$circuitBreaker = CompositeStrategy::make()
+    ->retry(RetryStrategy::exponentialBackoff(3, 100, 2.0))
+    ->fallback(FallbackStrategy::make(fn($payload, $error) => getCachedData($payload)));
+
+$result = Flowpipe::make()
+    ->send($serviceRequest)
+    ->withErrorHandler($circuitBreaker)
+    ->through($serviceSteps)
+    ->thenReturn();
+```
+
+**Database Transactions**:
+```php
+// Saga pattern with compensation
+$result = Flowpipe::make()
+    ->send($transactionData)
+    ->withCompensation(fn($payload, $error) => rollbackAllOperations($payload))
+    ->through($transactionSteps)
+    ->thenReturn();
 ```
 
 ## New Features Examples

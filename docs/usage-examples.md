@@ -1,6 +1,6 @@
-# Laravel Flowpipe Usage Example
+# Laravel Flowpipe Usage Examples
 
-This example demonstrates the complete usage of Laravel Flowpipe with all available features.
+This document demonstrates the complete usage of Laravel Flowpipe with all available features, including comprehensive error handling patterns.
 
 ## Basic Usage
 
@@ -20,6 +20,85 @@ $result = Flowpipe::make()
     ->thenReturn();
 
 echo $result; // "Hello-World"
+```
+
+## Error Handling Patterns
+
+### Basic Error Handling
+
+```php
+use Grazulex\LaravelFlowpipe\Flowpipe;
+
+// Retry with exponential backoff
+$result = Flowpipe::make()
+    ->send(['api_endpoint' => 'https://api.example.com/data'])
+    ->exponentialBackoff(3, 100, 2.0) // 3 attempts, 100ms base delay, 2x multiplier
+    ->through([
+        fn($data, $next) => $next(file_get_contents($data['api_endpoint'])),
+    ])
+    ->thenReturn();
+
+// Fallback to cached data
+$result = Flowpipe::make()
+    ->send(['user_id' => 123])
+    ->withFallback(fn($payload, $error) => Cache::get("user_{$payload['user_id']}", []))
+    ->through([
+        fn($data, $next) => $next(fetchUserFromDatabase($data['user_id'])),
+    ])
+    ->thenReturn();
+```
+
+### Production-Ready Error Handling
+
+```php
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\CompositeStrategy;
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\RetryStrategy;
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\FallbackStrategy;
+use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\CompensationStrategy;
+
+// E-commerce order processing with comprehensive error handling
+$orderResult = Flowpipe::make()
+    ->send($orderData)
+    
+    // Step 1: Validate order with fallback
+    ->withFallback(function ($payload, $error) {
+        Log::warning('Order validation failed, using basic validation', [
+            'order_id' => $payload['order_id'],
+            'error' => $error->getMessage()
+        ]);
+        return array_merge($payload, ['validation_mode' => 'basic']);
+    })
+    ->through([
+        fn($data, $next) => $next(validateOrderComprehensive($data)),
+    ])
+    
+    // Step 2: Process payment with retry and compensation
+    ->withErrorHandler(
+        CompositeStrategy::make()
+            ->retry(RetryStrategy::exponentialBackoff(3, 200, 2.0))
+            ->compensate(CompensationStrategy::make(function ($payload, $error, $context) {
+                // Rollback any partial payment processing
+                if (isset($payload['payment_intent_id'])) {
+                    cancelPaymentIntent($payload['payment_intent_id']);
+                }
+                return array_merge($payload, ['payment_cancelled' => true]);
+            }))
+    )
+    ->through([
+        fn($data, $next) => $next(processPayment($data)),
+    ])
+    
+    // Step 3: Update inventory with fallback
+    ->withFallback(function ($payload, $error) {
+        // Queue for manual inventory processing
+        QueueManualInventoryUpdate::dispatch($payload);
+        return array_merge($payload, ['inventory_queued' => true]);
+    })
+    ->through([
+        fn($data, $next) => $next(updateInventory($data)),
+    ])
+    
+    ->thenReturn();
 ```
 
 ## Using Built-in Steps
