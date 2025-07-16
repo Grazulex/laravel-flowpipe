@@ -82,11 +82,17 @@ final class FlowpipeExportCommand extends Command
         $mermaid = "flowchart TD\n";
         $title = $type === 'group' ? "Group: {$flowName}" : "Flow: {$flowName}";
 
-        // Style definitions for better visuals
-        $mermaid .= "    classDef groupStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px\n";
-        $mermaid .= "    classDef stepStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px\n";
-        $mermaid .= "    classDef conditionalStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px\n";
-        $mermaid .= "    classDef startEndStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px\n";
+        // Enhanced style definitions with improved group colors
+        $mermaid .= "    classDef groupStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#01579b\n";
+        $mermaid .= "    classDef stepStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#4a148c\n";
+        $mermaid .= "    classDef conditionalStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100\n";
+        $mermaid .= "    classDef startEndStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#2e7d32\n";
+        $mermaid .= "    classDef nestedStyle fill:#f9fbe7,stroke:#33691e,stroke-width:2px,color:#33691e\n";
+        $mermaid .= "    classDef transformStyle fill:#fce4ec,stroke:#ad1457,stroke-width:2px,color:#ad1457\n";
+        $mermaid .= "    classDef validationStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px,color:#2e7d32\n";
+        $mermaid .= "    classDef cacheStyle fill:#fff8e1,stroke:#ff8f00,stroke-width:2px,color:#ff8f00\n";
+        $mermaid .= "    classDef batchStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#7b1fa2\n";
+        $mermaid .= "    classDef retryStyle fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#c62828\n";
         $mermaid .= "\n";
 
         $mermaid .= "    Start([🚀 Start: {$title}])\n";
@@ -128,18 +134,22 @@ final class FlowpipeExportCommand extends Command
                         $mermaid .= "    {$currentNode} -->|❌ No| {$elseNode}\n";
                     }
                 } elseif (isset($step['type'])) {
-                    // Regular step with type-specific icons
+                    // Regular step with type-specific icons and colors
                     $stepType = $step['type'];
                     $action = $step['action'] ?? 'process';
                     $icon = $this->getStepIcon($stepType);
+                    $styleClass = $this->getStepStyleClass($stepType);
 
                     if ($stepType === 'group') {
                         $groupName = $step['name'] ?? 'unknown';
                         $mermaid .= "    {$currentNode}[\"📦 Group: {$groupName}\"]\n";
                         $mermaid .= "    {$currentNode}:::groupStyle\n";
+                    } elseif ($stepType === 'nested') {
+                        $mermaid .= "    {$currentNode}[\"{$icon} {$stepType}:\\n{$action}\"]\n";
+                        $mermaid .= "    {$currentNode}:::nestedStyle\n";
                     } else {
                         $mermaid .= "    {$currentNode}[\"{$icon} {$stepType}:\\n{$action}\"]\n";
-                        $mermaid .= "    {$currentNode}:::stepStyle\n";
+                        $mermaid .= "    {$currentNode}:::{$styleClass}\n";
                     }
 
                     $mermaid .= "    {$previousNode} --> {$currentNode}\n";
@@ -168,6 +178,21 @@ final class FlowpipeExportCommand extends Command
         $mermaid .= "    End:::startEndStyle\n";
 
         return $mermaid."    {$previousNode} --> End\n";
+    }
+
+    private function getStepStyleClass(string $stepType): string
+    {
+        return match ($stepType) {
+            'group' => 'groupStyle',
+            'nested' => 'nestedStyle',
+            'conditional' => 'conditionalStyle',
+            'transform' => 'transformStyle',
+            'validation' => 'validationStyle',
+            'cache' => 'cacheStyle',
+            'batch' => 'batchStyle',
+            'retry' => 'retryStyle',
+            default => 'stepStyle'
+        };
     }
 
     private function getStepIcon(string $stepType): string

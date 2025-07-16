@@ -1,12 +1,35 @@
 # Step Groups & Nesting
 
-Laravel Flowpipe supports reusable step groups and nested flows for better code organization and modularity.
+Laravel Flowpipe supports reusable step groups and nested flows for better code organization and modularity. With enhanced Mermaid export capabilities, you can visualize your flow structures with rich color coding for different step types.
 
 ## Overview
 
 Step Groups allow you to define reusable collections of steps that can be referenced by name in your flows. This promotes code reuse and better organization of complex workflows.
 
 Nested Flows allow you to create sub-workflows that run independently within your main flow, providing better isolation and modularity.
+
+## Enhanced Visualization with Group Colors
+
+Laravel Flowpipe now supports enhanced Mermaid diagrams with rich color coding:
+
+- **Groups**: Blue theme (`📦 Group elements`)
+- **Nested Flows**: Light green theme (`🔄 Nested elements`)
+- **Conditional Steps**: Orange theme (`❓ Conditional elements`)
+- **Transform Steps**: Pink theme (`🔄 Transform elements`)
+- **Validation Steps**: Green theme (`✅ Validation elements`)
+- **Cache Steps**: Yellow theme (`💾 Cache elements`)
+- **Batch Steps**: Purple theme (`📊 Batch elements`)
+- **Retry Steps**: Red theme (`🔄 Retry elements`)
+
+You can export any flow or group to see these color-coded visualizations:
+
+```bash
+# Export a group with colors
+php artisan flowpipe:export user-validation --type=group --format=mermaid
+
+# Export a flow with enhanced colors
+php artisan flowpipe:export user-processing --format=mermaid
+```
 
 ## Step Groups
 
@@ -299,5 +322,44 @@ $result = Flowpipe::make()
 
 - `useGroup(string $name)` - Add a group to the flow
 - `nested(array $steps)` - Create a nested flow
+
+## Enhanced Mermaid Export Examples
+
+### Exporting Groups with Colors
+
+```php
+// Define a colorful group
+Flowpipe::group('data-processing', [
+    // Transform steps will appear in pink
+    fn($data, $next) => $next(array_map('strtoupper', $data)),
+    // Validation steps will appear in green
+    fn($data, $next) => $next(array_filter($data, fn($item) => strlen($item) > 0)),
+    // Cache steps will appear in yellow
+    fn($data, $next) => $next(Cache::remember('processed-' . md5(serialize($data)), 3600, fn() => $data)),
+]);
+
+// Export this group to see the color-coded visualization
+// php artisan flowpipe:export data-processing --type=group --format=mermaid
+```
+
+### Complex Flow with Multiple Colors
+
+```php
+$result = Flowpipe::make()
+    ->send($data)
+    ->useGroup('data-processing')  // Blue group box
+    ->nested([                     // Light green nested flow
+        fn($data, $next) => $next(array_merge($data, ['processed' => true])),
+    ])
+    ->transform(fn($data) => $data) // Pink transform step
+    ->validate(['required' => true]) // Green validation step
+    ->cache('result-key', 3600)     // Yellow cache step
+    ->batch(100)                    // Purple batch step
+    ->retry(3)                      // Red retry step
+    ->thenReturn();
+
+// Export this flow to see all the different colored steps
+// php artisan flowpipe:export complex-flow --format=mermaid
+```
 
 For more examples and advanced usage, see the [examples directory](../examples/).

@@ -1,14 +1,41 @@
 # Step Groups and Nested Flows Examples
 
-This document provides comprehensive examples of using Step Groups and Nested Flows in Laravel Flowpipe.
+This document provides comprehensive examples of using Step Groups and Nested Flows in Laravel Flowpipe, including enhanced Mermaid export capabilities with rich color coding.
 
 ## Table of Contents
 
 1. [Basic Step Groups](#basic-step-groups)
 2. [Nested Flows](#nested-flows)
 3. [Combining Groups and Nested Flows](#combining-groups-and-nested-flows)
-4. [YAML Definitions](#yaml-definitions)
-5. [Real-world Examples](#real-world-examples)
+4. [Enhanced Mermaid Export with Colors](#enhanced-mermaid-export-with-colors)
+5. [YAML Definitions](#yaml-definitions)
+6. [Real-world Examples](#real-world-examples)
+
+## Enhanced Mermaid Export with Colors
+
+Laravel Flowpipe now supports rich color coding in Mermaid diagrams for different step types:
+
+- **Groups**: Blue theme (`📦 Group elements`)
+- **Nested Flows**: Light green theme (`🔄 Nested elements`)
+- **Conditional Steps**: Orange theme (`❓ Conditional elements`)
+- **Transform Steps**: Pink theme (`🔄 Transform elements`)
+- **Validation Steps**: Green theme (`✅ Validation elements`)
+- **Cache Steps**: Yellow theme (`💾 Cache elements`)
+- **Batch Steps**: Purple theme (`📊 Batch elements`)
+- **Retry Steps**: Red theme (`🔄 Retry elements`)
+
+### Exporting Groups with Enhanced Colors
+
+```bash
+# Export a group with enhanced color coding
+php artisan flowpipe:export user-validation --type=group --format=mermaid
+
+# Export a flow with all color-coded steps
+php artisan flowpipe:export user-registration --format=mermaid
+
+# Export to markdown with embedded colored diagram
+php artisan flowpipe:export user-registration --format=md --output=docs/user-registration.md
+```
 
 ## Basic Step Groups
 
@@ -288,6 +315,47 @@ steps:
 ```
 
 ## Real-world Examples
+
+### Enhanced Color Visualization Example
+
+```php
+// Create a flow with multiple step types to showcase colors
+Flowpipe::group('data-validation', [
+    fn($data, $next) => $next(filter_var($data['email'], FILTER_VALIDATE_EMAIL) ? $data : throw new InvalidArgumentException('Invalid email')),
+    fn($data, $next) => $next(strlen($data['name']) > 0 ? $data : throw new InvalidArgumentException('Name required')),
+]);
+
+Flowpipe::group('data-processing', [
+    fn($data, $next) => $next(array_merge($data, ['processed_at' => now()])),
+    fn($data, $next) => $next(array_merge($data, ['id' => uniqid()])),
+]);
+
+$result = Flowpipe::make()
+    ->send(['name' => 'John Doe', 'email' => 'john@example.com'])
+    ->useGroup('data-validation')         // Blue group
+    ->transform(fn($data) => $data)       // Pink transform
+    ->validate(['email' => 'required'])   // Green validation
+    ->cache('user-data', 3600)           // Yellow cache
+    ->nested([                           // Light green nested
+        fn($data, $next) => $next(array_merge($data, ['nested_processed' => true])),
+    ])
+    ->useGroup('data-processing')        // Blue group
+    ->batch(100)                         // Purple batch
+    ->retry(3)                           // Red retry
+    ->thenReturn();
+
+// Export this flow to see the color-coded visualization:
+// php artisan flowpipe:export enhanced-color-demo --format=mermaid
+```
+
+The exported Mermaid diagram will show:
+- Blue boxes for groups (`data-validation`, `data-processing`)
+- Pink box for transform step
+- Green box for validation step
+- Yellow box for cache step
+- Light green box for nested flow
+- Purple box for batch step
+- Red box for retry step
 
 ### Data Processing Pipeline
 

@@ -172,42 +172,57 @@ final class ValidateInputStep implements FlowStep
 ```
 
 
-### 5. `flowpipe:export`
+### 5. `flowpipe:export` - Enhanced with Group Colors
 
-Exports flow definitions to various formats for documentation or analysis.
+Exports flow definitions and groups to various formats for documentation or analysis. Now supports enhanced Mermaid diagrams with rich color coding for different step types.
 
 ```bash
-php artisan flowpipe:export {flow} {format}
+php artisan flowpipe:export {flow} {--format=json} {--output=} {--type=flow}
 ```
 
 #### Arguments
 
-- `flow` : The name of the flow to export
-- `format` : The export format (json, mermaid, md)
+- `flow` : The name of the flow or group to export
 
 #### Options
 
-- `--output=` : Specify output file path
-- `--include-steps` : Include step class content in export
-- `--include-conditions` : Include condition class content in export
+- `--format=json` : Export format (json, mermaid, md)
+- `--output=` : Output file path (optional)
+- `--type=flow` : Type to export (flow, group)
+
+#### Enhanced Color Coding
+
+The Mermaid export now supports rich color coding for different step types:
+
+- **Groups**: Blue theme (`📦 Group elements`)
+- **Nested Flows**: Light green theme (`🔄 Nested elements`)
+- **Conditional Steps**: Orange theme (`❓ Conditional elements`)
+- **Transform Steps**: Pink theme (`🔄 Transform elements`)
+- **Validation Steps**: Green theme (`✅ Validation elements`)
+- **Cache Steps**: Yellow theme (`💾 Cache elements`)
+- **Batch Steps**: Purple theme (`📊 Batch elements`)
+- **Retry Steps**: Red theme (`🔄 Retry elements`)
 
 #### Examples
 
 ```bash
-# Export to JSON
-php artisan flowpipe:export user-registration json
+# Export flow to JSON
+php artisan flowpipe:export user-registration --format=json
 
-# Export to Mermaid diagram
-php artisan flowpipe:export user-registration mermaid
+# Export flow to enhanced Mermaid diagram
+php artisan flowpipe:export user-registration --format=mermaid
+
+# Export group with color coding
+php artisan flowpipe:export user-validation --type=group --format=mermaid
 
 # Export to Markdown documentation
-php artisan flowpipe:export user-registration md
+php artisan flowpipe:export user-registration --format=md
 
 # Export with custom output path
-php artisan flowpipe:export user-registration json --output=docs/flows/user-registration.json
+php artisan flowpipe:export user-registration --format=json --output=docs/flows/user-registration.json
 
-# Export with step details
-php artisan flowpipe:export user-registration md --include-steps --include-conditions
+# Export group to documentation
+php artisan flowpipe:export data-processing --type=group --format=md --output=docs/groups/data-processing.md
 ```
 
 #### Export Formats
@@ -215,37 +230,98 @@ php artisan flowpipe:export user-registration md --include-steps --include-condi
 **JSON Export:**
 ```json
 {
-  "name": "user-registration",
+  "flow": "user-registration",
   "description": "User registration flow",
   "steps": [
     {
-      "name": "validate-input",
-      "class": "App\\Flowpipe\\Steps\\ValidateInputStep"
+      "type": "group",
+      "name": "user-validation"
+    },
+    {
+      "type": "nested",
+      "steps": [
+        {
+          "type": "closure",
+          "action": "hash_password"
+        }
+      ]
     }
   ]
 }
 ```
 
-**Mermaid Export:**
+**Enhanced Mermaid Export:**
 ```mermaid
-graph TD
-    A[Start] --> B[validate-input]
-    B --> C[create-user]
-    C --> D[send-welcome-email]
-    D --> E[End]
+flowchart TD
+    classDef groupStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#01579b
+    classDef stepStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#4a148c
+    classDef conditionalStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100
+    classDef startEndStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#2e7d32
+    classDef nestedStyle fill:#f9fbe7,stroke:#33691e,stroke-width:2px,color:#33691e
+    classDef transformStyle fill:#fce4ec,stroke:#ad1457,stroke-width:2px,color:#ad1457
+    classDef validationStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px,color:#2e7d32
+    classDef cacheStyle fill:#fff8e1,stroke:#ff8f00,stroke-width:2px,color:#ff8f00
+    classDef batchStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#7b1fa2
+    classDef retryStyle fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#c62828
+
+    Start([🚀 Start: Flow: user-registration])
+    Start:::startEndStyle
+    Step1[📦 Group: user-validation]
+    Step1:::groupStyle
+    Start --> Step1
+    Step2[🔄 nested: process]
+    Step2:::nestedStyle
+    Step1 --> Step2
+    End([🏁 End])
+    End:::startEndStyle
+    Step2 --> End
 ```
 
 **Markdown Export:**
 ```markdown
-# User Registration Flow
+# Flow Documentation: user-registration
 
-## Description
-User registration flow
+## 📋 Basic Information
 
-## Steps
-1. **validate-input** - App\Flowpipe\Steps\ValidateInputStep
-2. **create-user** - App\Flowpipe\Steps\CreateUserStep
-3. **send-welcome-email** - App\Flowpipe\Steps\SendWelcomeEmailStep
+- **Flow Name**: `user-registration`
+- **Type**: `flow`
+- **Description**: User registration flow with validation and processing
+- **Generated**: 2024-01-15 10:30:00
+
+## 🌊 Flow Visualization
+
+```mermaid
+flowchart TD
+    classDef groupStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#01579b
+    classDef nestedStyle fill:#f9fbe7,stroke:#33691e,stroke-width:2px,color:#33691e
+    classDef startEndStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#2e7d32
+    
+    Start([🚀 Start: Flow: user-registration])
+    Start:::startEndStyle
+    Step1[📦 Group: user-validation]
+    Step1:::groupStyle
+    Start --> Step1
+    Step2[🔄 nested: process]
+    Step2:::nestedStyle
+    Step1 --> Step2
+    End([🏁 End])
+    End:::startEndStyle
+    Step2 --> End
+```
+
+## 🔧 Detailed Steps
+
+### Step 1
+
+**Type**: Group Step
+
+**Action**: `user-validation`
+
+### Step 2
+
+**Type**: Nested Step
+
+**Action**: `process`
 ```
 
 ## Command Tips
