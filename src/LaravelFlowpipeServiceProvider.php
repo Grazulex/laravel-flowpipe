@@ -30,12 +30,20 @@ final class LaravelFlowpipeServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/Config/flowpipe.php', 'flowpipe');
+
+        // Register the FlowDefinitionValidator interface
+        $this->app->bind(
+            Contracts\FlowDefinitionValidatorInterface::class,
+            Validation\FlowDefinitionValidator::class
+        );
+
         $this->commands([
             Console\Commands\FlowpipeListCommand::class,
             Console\Commands\FlowpipeMakeStepCommand::class,
             Console\Commands\FlowpipeRunCommand::class,
             Console\Commands\FlowpipeExportCommand::class,
             Console\Commands\FlowpipeMakeFlowCommand::class,
+            Console\Commands\FlowpipeValidateCommand::class,
         ]);
     }
 
