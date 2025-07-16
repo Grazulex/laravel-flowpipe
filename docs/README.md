@@ -292,6 +292,32 @@ php artisan flowpipe:export user_processing --format=mermaid
 php artisan flowpipe:export user_processing --format=md --output=docs/user_processing.md
 ```
 
+### Validate Flows
+
+Validate YAML flow definitions for syntax errors and structural issues:
+
+```bash
+# Validate a specific flow
+php artisan flowpipe:validate user_processing
+
+# Validate all flows
+php artisan flowpipe:validate --all
+
+# Validate flows from a specific path
+php artisan flowpipe:validate --all --path=custom/flow/path
+
+# Get JSON output format
+php artisan flowpipe:validate --all --format=json
+```
+
+The validation command checks for:
+- **YAML syntax errors**: Invalid YAML format
+- **Required fields**: Missing flow name or steps
+- **Step structure**: Valid step types and required fields
+- **References**: Existing groups and step classes
+- **Condition syntax**: Valid operators and structure
+- **Nested flows**: Proper nesting structure
+
 ### Generate Flows
 
 ```bash

@@ -57,7 +57,7 @@ final class RetryStrategy implements ErrorHandlerStrategy
         }
 
         // Calculate delay
-        $delay = $this->delayCalculator instanceof \Closure
+        $delay = $this->delayCalculator instanceof Closure
             ? ($this->delayCalculator)($attemptNumber)
             : $this->delayMs;
 
