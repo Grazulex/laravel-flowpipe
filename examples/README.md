@@ -114,7 +114,40 @@ $result = Flowpipe::make()
 
 ## New Features Examples
 
-### 1. Enhanced Mermaid Export with Color Coding
+### 1. Flow Validation
+
+Laravel Flowpipe now includes comprehensive flow validation to ensure your YAML flow definitions are correct:
+
+```bash
+# Validate all flows in the examples directory
+php artisan flowpipe:validate --all
+
+# Validate a specific flow example
+php artisan flowpipe:validate --path=flows/user-registration.yaml
+
+# Get JSON output for CI/CD integration
+php artisan flowpipe:validate --all --format=json
+```
+
+**Key validation features:**
+- **Structure validation**: Ensures all required fields are present
+- **Step type validation**: Validates that only supported step types are used
+- **Reference validation**: Checks that groups and step classes exist
+- **Condition validation**: Validates condition operators and structure
+- **YAML syntax validation**: Catches YAML formatting errors
+
+**Example validation output:**
+```
+┌─────────────────────┬─────────┬────────┬──────────┐
+│ Flow                │ Status  │ Errors │ Warnings │
+├─────────────────────┼─────────┼────────┼──────────┤
+│ user-registration   │ ✅ Valid │ 0      │ 0        │
+│ order-processing    │ ✅ Valid │ 0      │ 1        │
+│ content-moderation  │ ✅ Valid │ 0      │ 0        │
+└─────────────────────┴─────────┴────────┴──────────┘
+```
+
+### 2. Enhanced Mermaid Export with Color Coding
 
 Laravel Flowpipe now supports rich color coding in Mermaid diagrams for different step types:
 
@@ -138,18 +171,18 @@ php artisan flowpipe:export user-validation --type=group --format=mermaid
 php artisan flowpipe:export user-registration --format=md --output=docs/user-registration.md
 ```
 
-### 2. Step Groups and Nested Flows Guide
+### 3. Step Groups and Nested Flows Guide
 - **File**: `groups-and-nested-flows.md`
 - **Description**: Comprehensive guide with examples showing how to use step groups and nested flows
 - **Features**: Basic groups, nested flows, combinations, YAML definitions, real-world examples, color visualization
 
-### 2. E-commerce Order Processing with Groups
+### 4. E-commerce Order Processing with Groups
 - **PHP Example**: `ecommerce-order-processing-groups.php`
 - **YAML Flow**: `flows/ecommerce-order-groups.yaml`
 - **Groups Used**: `order-validation`, `inventory-management`, `order-notifications`
 - **Description**: Complete e-commerce order processing using step groups and nested flows for payment processing and order creation
 
-### 3. User Registration with Groups and Nested Flows
+### 5. User Registration with Groups and Nested Flows
 - **PHP Example**: `user-registration-groups.php`
 - **YAML Flow**: `flows/user-registration-groups.yaml`
 - **Groups Used**: `user-validation`, `user-setup`, `user-notifications`
@@ -281,7 +314,29 @@ steps:
     class: App\Flowpipe\Steps\ValidateEmailStep
 ```
 
-### 5. Export Examples with Enhanced Colors
+### 5. Validate Examples
+
+Before using the examples, validate them to ensure they're correct:
+
+```bash
+# Validate all example flows
+php artisan flowpipe:validate --all
+
+# Validate specific flows
+php artisan flowpipe:validate --path=flows/user-registration.yaml
+php artisan flowpipe:validate --path=flows/order-processing.yaml
+
+# Run validation in CI/CD
+php artisan flowpipe:validate --all --format=json > validation-results.json
+```
+
+**Best practices for validation:**
+- Always validate after copying examples to your project
+- Run validation in your CI/CD pipeline
+- Check validation results before deploying
+- Use JSON format for automated processing
+
+### 6. Export Examples with Enhanced Colors
 
 ```bash
 # Export all flows with enhanced colors
@@ -298,7 +353,7 @@ php artisan flowpipe:export notifications --type=group --format=mermaid
 php artisan flowpipe:export user-registration --format=md --output="docs/flows/user-registration.md"
 ```
 
-### 6. Color Visualization Example
+### 7. Color Visualization Example
 
 Create a flow that demonstrates all available colors:
 

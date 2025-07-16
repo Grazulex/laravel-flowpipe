@@ -38,7 +38,102 @@ order-processing
   Features: Payment processing, Inventory check, Shipping calculation
 ```
 
-### 2. `flowpipe:make-flow`
+### 2. `flowpipe:validate`
+
+Validates flow definition files to ensure they are correctly structured and all references are valid.
+
+```bash
+php artisan flowpipe:validate
+```
+
+#### Options
+
+- `--path=` : Path to specific flow definition file to validate
+- `--all` : Validate all flow definitions in the configured directory
+- `--format=table` : Output format (table, json)
+
+#### Examples
+
+```bash
+# Validate all flows with table output
+php artisan flowpipe:validate --all
+
+# Validate specific flow
+php artisan flowpipe:validate --path=user-registration.yaml
+
+# Get JSON output for programmatic processing
+php artisan flowpipe:validate --all --format=json
+```
+
+#### Example Output
+
+**Table Format:**
+```
+┌─────────────────────┬─────────┬────────┬──────────┐
+│ Flow                │ Status  │ Errors │ Warnings │
+├─────────────────────┼─────────┼────────┼──────────┤
+│ UserProcessingFlow  │ ✅ Valid │ 0      │ 0        │
+│ PaymentFlow         │ ✅ Valid │ 0      │ 1        │
+│ InvalidFlow         │ ❌ Invalid │ 3      │ 0        │
+└─────────────────────┴─────────┴────────┴──────────┘
+
+Errors in 'InvalidFlow':
+  - Step 1: Unsupported step type 'invalid_type'
+  - Step 2: Closure step missing 'action' field
+  - Step 3: Group 'non_existent_group' not found
+```
+
+**JSON Format:**
+```json
+{
+  "valid": false,
+  "flows": [
+    {
+      "name": "UserProcessingFlow",
+      "valid": true,
+      "errors": [],
+      "warnings": [],
+      "error_count": 0,
+      "warning_count": 0
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "valid": 2,
+    "invalid": 1,
+    "errors": 3,
+    "warnings": 1
+  }
+}
+```
+
+### 3. `flowpipe:run`
+
+Runs a flow definition from YAML with optional payload.
+
+```bash
+php artisan flowpipe:run {flow}
+```
+
+#### Arguments
+
+- `flow` : The name of the flow to run
+
+#### Options
+
+- `--payload=` : Initial payload as JSON string
+
+#### Examples
+
+```bash
+# Run a flow without payload
+php artisan flowpipe:run user-registration
+
+# Run a flow with JSON payload
+php artisan flowpipe:run user-registration --payload='{"name":"John","email":"john@example.com"}'
+```
+
+### 4. `flowpipe:make-flow`
 
 Creates a new flow definition file with a basic template.
 
@@ -120,7 +215,7 @@ steps:
         action: trim
 ```
 
-### 3. `flowpipe:make-step`
+### 5. `flowpipe:make-step`
 
 Creates a new step class with proper structure and methods.
 
@@ -172,7 +267,7 @@ final class ValidateInputStep implements FlowStep
 ```
 
 
-### 5. `flowpipe:export` - Enhanced with Group Colors
+### 6. `flowpipe:export` - Enhanced with Group Colors
 
 Exports flow definitions and groups to various formats for documentation or analysis. Now supports enhanced Mermaid diagrams with rich color coding for different step types.
 

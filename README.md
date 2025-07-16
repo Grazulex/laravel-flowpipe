@@ -27,6 +27,7 @@
 ⚡ **Performance** - Optimized for speed and memory efficiency  
 📋 **YAML Flows** - Define flows in YAML for easy configuration  
 🎨 **Artisan Commands** - Full CLI support for flow management  
+✅ **Flow Validation** - Validate flow definitions with comprehensive error reporting  
 📈 **Export & Documentation** - Export to JSON, Mermaid, and Markdown  
 🔗 **Step Groups** - Reusable, named collections of steps  
 🎯 **Nested Flows** - Create isolated sub-workflows for complex logic  
@@ -348,8 +349,14 @@ Laravel Flowpipe comes with powerful Artisan commands:
 php artisan flowpipe:list
 php artisan flowpipe:list --detailed
 
+# Validate flow definitions
+php artisan flowpipe:validate --all
+php artisan flowpipe:validate --path=user-registration.yaml
+php artisan flowpipe:validate --all --format=json
+
 # Run a flow
 php artisan flowpipe:run user_processing
+php artisan flowpipe:run user_processing --payload='{"name":"John","email":"john@example.com"}'
 
 # Export flows to different formats with enhanced group colors
 php artisan flowpipe:export user_processing --format=json

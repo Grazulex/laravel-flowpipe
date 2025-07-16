@@ -1,0 +1,9 @@
+group: adult-user-processing
+description: Processing steps for adult users
+steps:
+  - type: closure
+    action: verify_age_requirements
+  - type: closure
+    action: apply_adult_user_permissions
+  - type: closure
+    action: send_adult_user_welcome
