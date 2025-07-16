@@ -391,6 +391,9 @@ For detailed documentation, examples, and advanced usage, please see:
 - 🔧 [Configuration](docs/configuration.md)
 - 🧪 [Testing](docs/testing.md)
 - 🎨 [Artisan Commands](docs/commands.md)
+- 🛡️ [Error Handling](docs/error-handling.md)
+- 📖 [Error Handling Usage Guide](docs/error-handling-usage.md)
+- 🎯 [Usage Examples](docs/usage-examples.md)
 
 ## Examples
 
