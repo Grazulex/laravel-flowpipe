@@ -1,38 +1,46 @@
-name: order-processing
+flow: order-processing
 description: E-commerce order processing with inventory management, payment processing, and fulfillment
 
 steps:
-  - name: validate-order-data
+  - type: action
+    name: validate-order-data
     class: Examples\Steps\OrderProcessing\ValidateOrderDataStep
     description: Validate order data (products, quantities, pricing)
 
-  - name: check-inventory-availability
+  - type: action
+    name: check-inventory-availability
     class: Examples\Steps\OrderProcessing\CheckInventoryAvailabilityStep
     description: Verify product availability and stock levels
 
-  - name: calculate-order-total
+  - type: action
+    name: calculate-order-total
     class: Examples\Steps\OrderProcessing\CalculateOrderTotalStep
     description: Calculate order total including taxes and shipping
 
-  - name: process-payment
+  - type: action
+    name: process-payment
     class: Examples\Steps\OrderProcessing\ProcessPaymentStep
     description: Process payment through payment gateway
     condition:
       class: Examples\Conditions\OrderProcessing\PaymentRequiredCondition
 
-  - name: reserve-inventory
+  - type: action
+    name: reserve-inventory
     class: Examples\Steps\OrderProcessing\ReserveInventoryStep
     description: Reserve inventory for the order
 
-  - name: create-order-record
+  - type: action
+    name: create-order-record
     class: Examples\Steps\OrderProcessing\CreateOrderRecordStep
     description: Create order record in database
 
-  - name: send-order-confirmation
+  - type: action
+    name: send-order-confirmation
     class: Examples\Steps\OrderProcessing\SendOrderConfirmationStep
     description: Send order confirmation email to customer
 
-  - name: trigger-fulfillment
+  - type: action
+    name: trigger-fulfillment
     class: Examples\Steps\OrderProcessing\TriggerFulfillmentStep
     description: Trigger warehouse fulfillment process
     condition:

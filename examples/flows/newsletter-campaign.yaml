@@ -1,40 +1,48 @@
-name: newsletter-campaign
+flow: newsletter-campaign
 description: Newsletter campaign management with audience segmentation and scheduling
 
 steps:
-  - name: validate-campaign-data
+  - type: action
+    name: validate-campaign-data
     class: Examples\Steps\Newsletter\ValidateCampaignDataStep
     description: Validate campaign configuration and content
 
-  - name: segment-audience
+  - type: action
+    name: segment-audience
     class: Examples\Steps\Newsletter\SegmentAudienceStep
     description: Segment audience based on criteria
 
-  - name: personalize-content
+  - type: action
+    name: personalize-content
     class: Examples\Steps\Newsletter\PersonalizeContentStep
     description: Personalize content for each recipient
 
-  - name: schedule-delivery
+  - type: action
+    name: schedule-delivery
     class: Examples\Steps\Newsletter\ScheduleDeliveryStep
     description: Schedule newsletter delivery
     condition:
       class: Examples\Conditions\Newsletter\ScheduledDeliveryCondition
 
-  - name: send-immediately
+  - type: action
+    name: send-immediately
     class: Examples\Steps\Newsletter\SendImmediatelyStep
     description: Send newsletter immediately
     condition:
       class: Examples\Conditions\Newsletter\ImmediateDeliveryCondition
 
-  - name: track-delivery-metrics
+  - type: action
+    name: track-delivery-metrics
     class: Examples\Steps\Newsletter\TrackDeliveryMetricsStep
     description: Track delivery metrics and engagement
 
-  - name: handle-bounces
+  - type: action
+    name: handle-bounces
     class: Examples\Steps\Newsletter\HandleBouncesStep
     description: Handle bounce notifications and unsubscribes
 
-  - name: update-subscriber-preferences
+  - type: action
+    name: update-subscriber-preferences
     class: Examples\Steps\Newsletter\UpdateSubscriberPreferencesStep
     description: Update subscriber preferences based on interactions
 
