@@ -9,6 +9,7 @@ use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
 use Grazulex\LaravelFlowpipe\Contracts\Tracer;
 use Grazulex\LaravelFlowpipe\Support\Helpers;
 use Grazulex\LaravelFlowpipe\Support\StepResolver;
+use Grazulex\LaravelFlowpipe\Tracer as TracerNamespace;
 
 final class Flowpipe
 {
@@ -27,6 +28,26 @@ final class Flowpipe
         $instance->context = new FlowContext($tracer);
 
         return $instance;
+    }
+
+    public static function debug(bool $logToFile = false, string $logChannel = 'default'): self
+    {
+        return self::make(new TracerNamespace\DebugTracer($logToFile, $logChannel));
+    }
+
+    public static function performance(): self
+    {
+        return self::make(new TracerNamespace\PerformanceTracer());
+    }
+
+    public static function database(string $tableName = 'flowpipe_traces'): self
+    {
+        return self::make(new TracerNamespace\DatabaseTracer($tableName));
+    }
+
+    public static function test(): self
+    {
+        return self::make(new TracerNamespace\TestTracer());
     }
 
     public function withTracer(?Tracer $tracer): self
@@ -49,6 +70,48 @@ final class Flowpipe
     public function through(array $steps): self
     {
         $this->steps = array_map([StepResolver::class, 'resolve'], $steps);
+
+        return $this;
+    }
+
+    public function cache(string $key, int $ttl = 3600, ?string $store = null): self
+    {
+        $this->steps[] = new Steps\CacheStep($key, $ttl, $store);
+
+        return $this;
+    }
+
+    public function retry(int $maxAttempts = 3, int $delayMs = 100, ?Closure $shouldRetry = null): self
+    {
+        $this->steps[] = new Steps\RetryStep($maxAttempts, $delayMs, $shouldRetry);
+
+        return $this;
+    }
+
+    public function rateLimit(string $key, int $maxAttempts = 60, int $decayMinutes = 1, ?Closure $keyGenerator = null): self
+    {
+        $this->steps[] = new Steps\RateLimitStep($key, $maxAttempts, $decayMinutes, $keyGenerator);
+
+        return $this;
+    }
+
+    public function transform(Closure $transformer): self
+    {
+        $this->steps[] = new Steps\TransformStep($transformer);
+
+        return $this;
+    }
+
+    public function validate(array $rules, array $messages = [], array $customAttributes = []): self
+    {
+        $this->steps[] = new Steps\ValidationStep($rules, $messages, $customAttributes);
+
+        return $this;
+    }
+
+    public function batch(int $batchSize = 100, bool $preserveKeys = false): self
+    {
+        $this->steps[] = new Steps\BatchStep($batchSize, $preserveKeys);
 
         return $this;
     }

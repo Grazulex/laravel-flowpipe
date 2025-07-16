@@ -1,12 +1,10 @@
-includes:
-    - ./vendor/larastan/larastan/extension.neon
-
-
 parameters:
+    ignoreErrors:
+        - '#Strict comparison using === between 1 and 1 will always evaluate to true#'
     level: 5
-
     paths:
         - src
-
     bootstrapFiles:
         - vendor/autoload.php
+includes:
+    - ./vendor/larastan/larastan/extension.neon
