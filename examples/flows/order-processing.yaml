@@ -1,0 +1,47 @@
+name: order-processing
+description: E-commerce order processing with inventory management, payment processing, and fulfillment
+
+steps:
+  - name: validate-order-data
+    class: Examples\Steps\OrderProcessing\ValidateOrderDataStep
+    description: Validate order data (products, quantities, pricing)
+
+  - name: check-inventory-availability
+    class: Examples\Steps\OrderProcessing\CheckInventoryAvailabilityStep
+    description: Verify product availability and stock levels
+
+  - name: calculate-order-total
+    class: Examples\Steps\OrderProcessing\CalculateOrderTotalStep
+    description: Calculate order total including taxes and shipping
+
+  - name: process-payment
+    class: Examples\Steps\OrderProcessing\ProcessPaymentStep
+    description: Process payment through payment gateway
+    condition:
+      class: Examples\Conditions\OrderProcessing\PaymentRequiredCondition
+
+  - name: reserve-inventory
+    class: Examples\Steps\OrderProcessing\ReserveInventoryStep
+    description: Reserve inventory for the order
+
+  - name: create-order-record
+    class: Examples\Steps\OrderProcessing\CreateOrderRecordStep
+    description: Create order record in database
+
+  - name: send-order-confirmation
+    class: Examples\Steps\OrderProcessing\SendOrderConfirmationStep
+    description: Send order confirmation email to customer
+
+  - name: trigger-fulfillment
+    class: Examples\Steps\OrderProcessing\TriggerFulfillmentStep
+    description: Trigger warehouse fulfillment process
+    condition:
+      class: Examples\Conditions\OrderProcessing\AutoFulfillmentEnabledCondition
+
+  - name: update-customer-metrics
+    class: Examples\Steps\OrderProcessing\UpdateCustomerMetricsStep
+    description: Update customer purchase history and metrics
+
+  - name: log-order-event
+    class: Examples\Steps\OrderProcessing\LogOrderEventStep
+    description: Log order processing event for analytics

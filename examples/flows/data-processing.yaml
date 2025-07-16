@@ -1,0 +1,41 @@
+name: data-processing
+description: ETL pipeline for data transformation, validation, and analysis
+
+steps:
+  - name: extract-raw-data
+    class: Examples\Steps\DataProcessing\ExtractRawDataStep
+    description: Extract raw data from various sources
+
+  - name: validate-data-format
+    class: Examples\Steps\DataProcessing\ValidateDataFormatStep
+    description: Validate data format and schema
+
+  - name: clean-data
+    class: Examples\Steps\DataProcessing\CleanDataStep
+    description: Clean and normalize data
+
+  - name: transform-data
+    class: Examples\Steps\DataProcessing\TransformDataStep
+    description: Transform data to target format
+
+  - name: enrich-data
+    class: Examples\Steps\DataProcessing\EnrichDataStep
+    description: Enrich data with additional information
+    condition:
+      class: Examples\Conditions\DataProcessing\DataEnrichmentEnabledCondition
+
+  - name: validate-transformed-data
+    class: Examples\Steps\DataProcessing\ValidateTransformedDataStep
+    description: Validate transformed data quality
+
+  - name: load-to-warehouse
+    class: Examples\Steps\DataProcessing\LoadToWarehouseStep
+    description: Load processed data to data warehouse
+
+  - name: generate-data-report
+    class: Examples\Steps\DataProcessing\GenerateDataReportStep
+    description: Generate data processing report
+
+  - name: notify-stakeholders
+    class: Examples\Steps\DataProcessing\NotifyStakeholdersStep
+    description: Notify stakeholders of processing completion
