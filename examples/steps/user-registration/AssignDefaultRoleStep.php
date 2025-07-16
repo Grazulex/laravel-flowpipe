@@ -6,19 +6,20 @@ namespace Examples\Steps\UserRegistration;
 
 use Exception;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
-use Grazulex\LaravelFlowpipe\FlowContext;
 use Illuminate\Support\Facades\DB;
 
 final class AssignDefaultRoleStep implements FlowStep
 {
-    public function handle(FlowContext $context): FlowContext
+    public function handle(mixed $payload, \Closure $next): mixed
     {
-        $userId = $context->get('user_id');
+        if (!is_array($payload)) {
+            throw new \InvalidArgumentException('Payload must be an array');
+        }
 
-        if (! $userId) {
-            $context->addError('User ID is required to assign role');
+        $userId = $payload['id'] ?? null;
 
-            return $context;
+        if (!$userId) {
+            throw new \InvalidArgumentException('User ID is required to assign role');
         }
 
         try {
@@ -28,10 +29,8 @@ final class AssignDefaultRoleStep implements FlowStep
                 ->where('is_default', true)
                 ->first();
 
-            if (! $defaultRole) {
-                $context->addError('Default user role not found');
-
-                return $context;
+            if (!$defaultRole) {
+                throw new \RuntimeException('Default user role not found');
             }
 
             // Assign role to user
@@ -42,14 +41,13 @@ final class AssignDefaultRoleStep implements FlowStep
                 'updated_at' => now(),
             ]);
 
-            $context->set('role_assigned', true);
-            $context->set('assigned_role', $defaultRole->name);
+            $payload['role_assigned'] = true;
+            $payload['assigned_role'] = $defaultRole->name;
+
+            return $next($payload);
 
         } catch (Exception $e) {
-            $context->addError('Failed to assign default role: '.$e->getMessage());
-            $context->set('role_assigned', false);
+            throw new \RuntimeException('Failed to assign default role: ' . $e->getMessage());
         }
-
-        return $context;
     }
 }

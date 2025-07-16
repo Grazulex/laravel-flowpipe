@@ -1,39 +1,41 @@
 name: user-registration
 description: Complete user registration process with validation, email verification, and profile setup
 
+send:
+  name: "John Doe"
+  email: "john.doe@example.com"
+  password: "SecurePassword123!"
+  terms_accepted: true
+
 steps:
   - name: validate-input
-    class: Examples\Steps\UserRegistration\ValidateInputStep
+    step: Examples\Steps\UserRegistration\ValidateInputStep
     description: Validate user input data (email, password, name)
 
   - name: check-email-uniqueness
-    class: Examples\Steps\UserRegistration\CheckEmailUniquenessStep
+    step: Examples\Steps\UserRegistration\CheckEmailUniquenessStep
     description: Verify email address is not already registered
 
   - name: create-user-account
-    class: Examples\Steps\UserRegistration\CreateUserAccountStep
+    step: Examples\Steps\UserRegistration\CreateUserAccountStep
     description: Create user account in database
 
   - name: send-verification-email
-    class: Examples\Steps\UserRegistration\SendVerificationEmailStep
+    step: Examples\Steps\UserRegistration\SendVerificationEmailStep
     description: Send email verification link to user
-    condition:
-      class: Examples\Conditions\UserRegistration\EmailVerificationEnabledCondition
 
   - name: setup-user-profile
-    class: Examples\Steps\UserRegistration\SetupUserProfileStep
+    step: Examples\Steps\UserRegistration\SetupUserProfileStep
     description: Initialize user profile with default settings
 
   - name: assign-default-role
-    class: Examples\Steps\UserRegistration\AssignDefaultRoleStep
+    step: Examples\Steps\UserRegistration\AssignDefaultRoleStep
     description: Assign default user role and permissions
 
   - name: send-welcome-email
-    class: Examples\Steps\UserRegistration\SendWelcomeEmailStep
+    step: Examples\Steps\UserRegistration\SendWelcomeEmailStep
     description: Send welcome email to new user
-    condition:
-      class: Examples\Conditions\UserRegistration\WelcomeEmailEnabledCondition
 
   - name: log-registration-event
-    class: Examples\Steps\UserRegistration\LogRegistrationEventStep
+    step: Examples\Steps\UserRegistration\LogRegistrationEventStep
     description: Log user registration for analytics

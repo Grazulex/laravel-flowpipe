@@ -6,19 +6,20 @@ namespace Examples\Steps\UserRegistration;
 
 use Exception;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
-use Grazulex\LaravelFlowpipe\FlowContext;
 use Illuminate\Support\Facades\DB;
 
 final class SetupUserProfileStep implements FlowStep
 {
-    public function handle(FlowContext $context): FlowContext
+    public function handle(mixed $payload, \Closure $next): mixed
     {
-        $userId = $context->get('user_id');
+        if (!is_array($payload)) {
+            throw new \InvalidArgumentException('Payload must be an array');
+        }
 
-        if (! $userId) {
-            $context->addError('User ID is required to setup profile');
+        $userId = $payload['id'] ?? null;
 
-            return $context;
+        if (!$userId) {
+            throw new \InvalidArgumentException('User ID is required to setup profile');
         }
 
         try {
@@ -44,14 +45,13 @@ final class SetupUserProfileStep implements FlowStep
                 'updated_at' => now(),
             ]);
 
-            $context->set('profile_id', $profileId);
-            $context->set('profile_created', true);
+            $payload['profile_id'] = $profileId;
+            $payload['profile_created'] = true;
+
+            return $next($payload);
 
         } catch (Exception $e) {
-            $context->addError('Failed to setup user profile: '.$e->getMessage());
-            $context->set('profile_created', false);
+            throw new \RuntimeException('Failed to setup user profile: ' . $e->getMessage());
         }
-
-        return $context;
     }
 }

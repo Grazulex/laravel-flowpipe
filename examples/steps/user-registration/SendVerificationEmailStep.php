@@ -6,30 +6,28 @@ namespace Examples\Steps\UserRegistration;
 
 use Exception;
 use Grazulex\LaravelFlowpipe\Contracts\FlowStep;
-use Grazulex\LaravelFlowpipe\FlowContext;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 final class SendVerificationEmailStep implements FlowStep
 {
-    public function handle(FlowContext $context): FlowContext
+    public function handle(mixed $payload, \Closure $next): mixed
     {
-        $userData = $context->get('user_data', []);
-        $userId = $context->get('user_id');
+        if (!is_array($payload)) {
+            throw new \InvalidArgumentException('Payload must be an array');
+        }
 
-        if (! $userId || ! $userData) {
-            $context->addError('User data is required to send verification email');
+        $userData = $payload;
+        $userId = $userData['id'] ?? null;
 
-            return $context;
+        if (!$userId || !isset($userData['email'])) {
+            throw new \InvalidArgumentException('User data with ID and email is required to send verification email');
         }
 
         try {
             // Generate verification token
             $verificationToken = Str::random(64);
-
-            // Store verification token (you would typically save this to database)
-            $context->set('verification_token', $verificationToken);
 
             // Generate verification URL
             $verificationUrl = URL::temporarySignedRoute(
@@ -47,13 +45,14 @@ final class SendVerificationEmailStep implements FlowStep
                     ->subject('Verify Your Email Address');
             });
 
-            $context->set('verification_email_sent', true);
+            // Add verification info to payload
+            $userData['verification_token'] = $verificationToken;
+            $userData['verification_email_sent'] = true;
+
+            return $next($userData);
 
         } catch (Exception $e) {
-            $context->addError('Failed to send verification email: '.$e->getMessage());
-            $context->set('verification_email_sent', false);
+            throw new \RuntimeException('Failed to send verification email: ' . $e->getMessage());
         }
-
-        return $context;
     }
 }
