@@ -1,0 +1,24 @@
+flow: InvalidValidationDemo
+description: Example flow showing common validation errors
+# Missing required 'steps' field
+
+send:
+  name: "Demo User"
+  email: "demo@example.com"
+
+# This should have steps array but it's missing
+invalid_field: "This field is not recognized"
+
+# If steps were here, these would be validation errors:
+# steps:
+#   - type: unsupported_type        # Invalid step type
+#     action: some_action
+#   - type: closure                 # Missing required action field
+#   - type: step                    # Missing required class field
+#   - type: condition
+#     condition:
+#       field: status
+#       operator: invalid_operator  # Invalid operator
+#       value: "active"
+#   - type: group
+#     name: non_existent_group      # Group doesn't exist
