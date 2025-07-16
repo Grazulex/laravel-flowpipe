@@ -226,7 +226,7 @@ class FlowDefinitionValidator implements FlowDefinitionValidatorInterface
     private function validateReferences(array $steps, array &$warnings = []): array
     {
         $errors = [];
-        
+
         // First, collect all groups defined in this flow
         $definedGroups = $this->collectDefinedGroups($steps);
 
@@ -235,11 +235,9 @@ class FlowDefinitionValidator implements FlowDefinitionValidatorInterface
 
             switch ($step['type'] ?? '') {
                 case 'group':
-                    if (isset($step['name'])) {
-                        // Check if group exists in registry or is defined in this flow
-                        if (!FlowGroupRegistry::has($step['name']) && !in_array($step['name'], $definedGroups)) {
-                            $warnings[] = "Step {$stepNum}: Group '{$step['name']}' not found in registry or flow definition";
-                        }
+                    // Check if group exists in registry or is defined in this flow
+                    if (isset($step['name']) && (! FlowGroupRegistry::has($step['name']) && ! in_array($step['name'], $definedGroups))) {
+                        $warnings[] = "Step {$stepNum}: Group '{$step['name']}' not found in registry or flow definition";
                     }
                     break;
 
@@ -269,20 +267,20 @@ class FlowDefinitionValidator implements FlowDefinitionValidatorInterface
     private function collectDefinedGroups(array $steps): array
     {
         $groups = [];
-        
+
         foreach ($steps as $step) {
             // Si c'est un groupe avec une définition complète
             if (($step['type'] ?? '') === 'group' && isset($step['name']) && isset($step['steps'])) {
                 $groups[] = $step['name'];
             }
-            
+
             // Recherche récursive dans les nested steps
             if (($step['type'] ?? '') === 'nested' && isset($step['steps'])) {
                 $nestedGroups = $this->collectDefinedGroups($step['steps']);
                 $groups = array_merge($groups, $nestedGroups);
             }
         }
-        
+
         return array_unique($groups);
     }
 
