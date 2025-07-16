@@ -15,8 +15,6 @@
   <a href="https://packagist.org/packages/grazulex/laravel-flowpipe"><img src="https://img.shields.io/packagist/dt/grazulex/laravel-flowpipe.svg?style=flat-square" alt="Total Downloads"></a>
 </p>
 
-> [!WARNING]  
-> **🚧 This project is currently under construction** - Features and API may change without notice. Please consider this package as experimental until the first stable release.
 
 ## Features
 
