@@ -51,6 +51,7 @@ Every flow definition must have:
 
 ### Supported Step Types
 
+- `action`: Execute an action (legacy alias for `step`)
 - `closure`: Execute a closure action
 - `step`: Execute a step class
 - `condition`: Execute conditional logic

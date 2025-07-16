@@ -252,6 +252,7 @@ steps:
 
 ### Supported Step Types
 
+- `action` - Execute an action (legacy alias for `step`)
 - `closure` - Execute a closure action
 - `step` - Execute a custom step class
 - `condition` - Conditional execution

@@ -827,3 +827,361 @@ public function test_flow_with_validation()
 ```
 
 This comprehensive testing guide covers all aspects of testing Laravel Flowpipe flows using the actual implementation, from unit tests to integration tests and performance testing.
+
+## Testing Flow Validation
+
+Laravel Flowpipe includes comprehensive validation testing to ensure your YAML flow definitions are correct and properly tested.
+
+### Testing Flow Definition Validation
+
+```php
+<?php
+
+namespace Tests\Feature;
+
+use Grazulex\LaravelFlowpipe\Validation\FlowDefinitionValidator;
+use Grazulex\LaravelFlowpipe\Registry\FlowDefinitionRegistry;
+use Tests\TestCase;
+
+class FlowValidationTest extends TestCase
+{
+    private FlowDefinitionValidator $validator;
+    
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->validator = new FlowDefinitionValidator();
+    }
+    
+    public function test_validates_correct_flow_definition()
+    {
+        $definition = [
+            'flow' => 'TestFlow',
+            'description' => 'Test flow definition',
+            'steps' => [
+                [
+                    'type' => 'closure',
+                    'action' => 'test_action'
+                ]
+            ]
+        ];
+        
+        $result = $this->validator->validateFlowDefinition($definition);
+        
+        $this->assertTrue($result->isValid());
+        $this->assertEmpty($result->errors);
+    }
+    
+    public function test_detects_missing_required_fields()
+    {
+        $definition = [
+            'description' => 'Test flow definition',
+            // Missing 'flow' field
+            'steps' => [
+                [
+                    'type' => 'closure',
+                    'action' => 'test_action'
+                ]
+            ]
+        ];
+        
+        $result = $this->validator->validateFlowDefinition($definition);
+        
+        $this->assertFalse($result->isValid());
+        $this->assertContains("Missing required field: 'flow'", $result->errors);
+    }
+    
+    public function test_detects_invalid_step_types()
+    {
+        $definition = [
+            'flow' => 'TestFlow',
+            'steps' => [
+                [
+                    'type' => 'invalid_type',
+                    'action' => 'test_action'
+                ]
+            ]
+        ];
+        
+        $result = $this->validator->validateFlowDefinition($definition);
+        
+        $this->assertFalse($result->isValid());
+        $this->assertContains("Unsupported step type: 'invalid_type'", $result->errors);
+    }
+    
+    public function test_validates_condition_steps()
+    {
+        $definition = [
+            'flow' => 'TestFlow',
+            'steps' => [
+                [
+                    'type' => 'condition',
+                    'condition' => [
+                        'field' => 'active',
+                        'operator' => 'equals',
+                        'value' => true
+                    ],
+                    'step' => [
+                        'type' => 'closure',
+                        'action' => 'handle_active'
+                    ]
+                ]
+            ]
+        ];
+        
+        $result = $this->validator->validateFlowDefinition($definition);
+        
+        $this->assertTrue($result->isValid());
+    }
+    
+    public function test_detects_invalid_condition_operators()
+    {
+        $definition = [
+            'flow' => 'TestFlow',
+            'steps' => [
+                [
+                    'type' => 'condition',
+                    'condition' => [
+                        'field' => 'active',
+                        'operator' => 'not_supported',
+                        'value' => true
+                    ],
+                    'step' => [
+                        'type' => 'closure',
+                        'action' => 'handle_active'
+                    ]
+                ]
+            ]
+        ];
+        
+        $result = $this->validator->validateFlowDefinition($definition);
+        
+        $this->assertFalse($result->isValid());
+        $this->assertContains("Unsupported operator: 'not_supported'", $result->errors);
+    }
+    
+    public function test_validates_nested_flows()
+    {
+        $definition = [
+            'flow' => 'TestFlow',
+            'steps' => [
+                [
+                    'type' => 'nested',
+                    'steps' => [
+                        [
+                            'type' => 'closure',
+                            'action' => 'nested_action'
+                        ]
+                    ]
+                ]
+            ]
+        ];
+        
+        $result = $this->validator->validateFlowDefinition($definition);
+        
+        $this->assertTrue($result->isValid());
+    }
+}
+```
+
+### Testing Validation Command
+
+```php
+<?php
+
+namespace Tests\Feature;
+
+use Grazulex\LaravelFlowpipe\Console\Commands\FlowpipeValidateCommand;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
+use Tests\TestCase;
+
+class ValidationCommandTest extends TestCase
+{
+    use RefreshDatabase;
+    
+    private string $testFlowsPath;
+    
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->testFlowsPath = storage_path('test-flows');
+        File::ensureDirectoryExists($this->testFlowsPath);
+    }
+    
+    protected function tearDown(): void
+    {
+        File::deleteDirectory($this->testFlowsPath);
+        parent::tearDown();
+    }
+    
+    public function test_validates_all_flows_with_success()
+    {
+        // Create a valid flow file
+        File::put($this->testFlowsPath . '/valid-flow.yaml', '
+flow: ValidFlow
+description: A valid flow for testing
+steps:
+  - type: closure
+    action: test_action
+        ');
+        
+        $this->artisan('flowpipe:validate', [
+            '--all' => true,
+            '--path' => $this->testFlowsPath
+        ])
+        ->expectsOutput('All flows are valid')
+        ->assertExitCode(0);
+    }
+    
+    public function test_validates_all_flows_with_errors()
+    {
+        // Create an invalid flow file
+        File::put($this->testFlowsPath . '/invalid-flow.yaml', '
+flow: InvalidFlow
+description: An invalid flow for testing
+# Missing steps field
+        ');
+        
+        $this->artisan('flowpipe:validate', [
+            '--all' => true,
+            '--path' => $this->testFlowsPath
+        ])
+        ->expectsOutput('Validation failed')
+        ->assertExitCode(1);
+    }
+    
+    public function test_validates_single_flow()
+    {
+        // Create a valid flow file
+        File::put($this->testFlowsPath . '/single-flow.yaml', '
+flow: SingleFlow
+description: A single flow for testing
+steps:
+  - type: closure
+    action: test_action
+        ');
+        
+        $this->artisan('flowpipe:validate', [
+            '--path' => $this->testFlowsPath . '/single-flow.yaml'
+        ])
+        ->assertExitCode(0);
+    }
+    
+    public function test_validates_with_json_output()
+    {
+        // Create a flow file
+        File::put($this->testFlowsPath . '/json-test.yaml', '
+flow: JsonTest
+description: Flow for JSON output testing
+steps:
+  - type: closure
+    action: test_action
+        ');
+        
+        $this->artisan('flowpipe:validate', [
+            '--all' => true,
+            '--format' => 'json',
+            '--path' => $this->testFlowsPath
+        ])
+        ->assertExitCode(0);
+    }
+}
+```
+
+### Testing Validation in CI/CD
+
+```php
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Support\Facades\File;
+use Tests\TestCase;
+
+class ContinuousIntegrationTest extends TestCase
+{
+    public function test_flow_validation_in_ci_pipeline()
+    {
+        // Simulate CI environment
+        $this->artisan('flowpipe:validate', [
+            '--all' => true,
+            '--format' => 'json'
+        ])
+        ->assertExitCode(0);
+        
+        // Assert that all flows are valid for deployment
+        $this->artisan('flowpipe:validate', ['--all' => true])
+            ->expectsOutput('All flows are valid')
+            ->assertExitCode(0);
+    }
+    
+    public function test_validation_prevents_invalid_deployment()
+    {
+        // Create a temporarily invalid flow
+        $invalidFlow = storage_path('app/invalid-test.yaml');
+        File::put($invalidFlow, '
+flow: InvalidDeploymentTest
+description: Invalid flow to test CI prevention
+# Missing steps field
+        ');
+        
+        $this->artisan('flowpipe:validate', [
+            '--path' => $invalidFlow
+        ])
+        ->assertExitCode(1);
+        
+        // Clean up
+        File::delete($invalidFlow);
+    }
+}
+```
+
+### Integration Testing with Validation
+
+```php
+<?php
+
+namespace Tests\Feature;
+
+use Grazulex\LaravelFlowpipe\Flowpipe;
+use Grazulex\LaravelFlowpipe\Registry\FlowDefinitionRegistry;
+use Tests\TestCase;
+
+class ValidationIntegrationTest extends TestCase
+{
+    public function test_flow_validation_before_execution()
+    {
+        // Test that flows are validated before execution
+        $registry = new FlowDefinitionRegistry();
+        
+        // This should pass validation
+        $validDefinition = [
+            'flow' => 'IntegrationTest',
+            'steps' => [
+                [
+                    'type' => 'closure',
+                    'action' => 'test_action'
+                ]
+            ]
+        ];
+        
+        $validator = new \Grazulex\LaravelFlowpipe\Validation\FlowDefinitionValidator();
+        $result = $validator->validateFlowDefinition($validDefinition);
+        
+        $this->assertTrue($result->isValid());
+        
+        // Now test the actual flow execution
+        $flowResult = Flowpipe::make()
+            ->send(['test' => 'data'])
+            ->through([
+                fn($data, $next) => $next(array_merge($data, ['processed' => true]))
+            ])
+            ->thenReturn();
+        
+        $this->assertTrue($flowResult['processed']);
+    }
+}
+```
+
+This comprehensive validation testing section ensures that your flow definitions are properly validated both during development and in CI/CD pipelines.
