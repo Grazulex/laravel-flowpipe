@@ -28,6 +28,8 @@
 📋 **YAML Flows** - Define flows in YAML for easy configuration  
 🎨 **Artisan Commands** - Full CLI support for flow management  
 📈 **Export & Documentation** - Export to JSON, Mermaid, and Markdown  
+🔗 **Step Groups** - Reusable, named collections of steps  
+🎯 **Nested Flows** - Create isolated sub-workflows for complex logic  
 
 ## Requirements
 
@@ -95,9 +97,94 @@ $result = Flowpipe::make()
 // Result: "JOHN"
 ```
 
+### Step Groups & Nested Flows
+
+Laravel Flowpipe supports reusable step groups and nested flows for better organization and modularity.
+
+#### Step Groups
+
+Define reusable groups of steps:
+
+```php
+use Grazulex\LaravelFlowpipe\Flowpipe;
+
+// Define reusable step groups
+Flowpipe::group('text-processing', [
+    fn($data, $next) => $next(trim($data)),
+    fn($data, $next) => $next(strtoupper($data)),
+    fn($data, $next) => $next(str_replace(' ', '-', $data)),
+]);
+
+Flowpipe::group('validation', [
+    fn($data, $next) => $next(strlen($data) > 0 ? $data : throw new InvalidArgumentException('Empty data')),
+    fn($data, $next) => $next(preg_match('/^[A-Z-]+$/', $data) ? $data : throw new InvalidArgumentException('Invalid format')),
+]);
+
+// Use groups in flows
+$result = Flowpipe::make()
+    ->send('  hello world  ')
+    ->useGroup('text-processing')
+    ->useGroup('validation')
+    ->through([
+        fn($data, $next) => $next($data . '!'),
+    ])
+    ->thenReturn();
+
+// Result: "HELLO-WORLD!"
+```
+
+#### Nested Flows
+
+Create isolated sub-workflows:
+
+```php
+$result = Flowpipe::make()
+    ->send('hello world')
+    ->nested([
+        // This nested flow runs independently
+        fn($data, $next) => $next(strtoupper($data)),
+        fn($data, $next) => $next(str_replace(' ', '-', $data)),
+    ])
+    ->through([
+        // Main flow continues with nested result
+        fn($data, $next) => $next($data . '!'),
+    ])
+    ->thenReturn();
+
+// Result: "HELLO-WORLD!"
+```
+
+#### Combining Groups and Nested Flows
+
+```php
+// Define processing groups
+Flowpipe::group('user-validation', [
+    fn($user, $next) => $next(filter_var($user['email'], FILTER_VALIDATE_EMAIL) ? $user : throw new InvalidArgumentException('Invalid email')),
+    fn($user, $next) => $next(strlen($user['name']) > 0 ? $user : throw new InvalidArgumentException('Name required')),
+]);
+
+Flowpipe::group('notifications', [
+    fn($user, $next) => $next(array_merge($user, ['email_sent' => true])),
+    fn($user, $next) => $next(array_merge($user, ['logged' => true])),
+]);
+
+$result = Flowpipe::make()
+    ->send(['email' => 'user@example.com', 'name' => 'John Doe'])
+    ->useGroup('user-validation')
+    ->nested([
+        // Complex processing in isolation
+        fn($user, $next) => $next(array_merge($user, ['id' => uniqid()])),
+        fn($user, $next) => $next(array_merge($user, ['created_at' => now()])),
+    ])
+    ->useGroup('notifications')
+    ->thenReturn();
+
+// Result: Complete user array with validation, processing, and notifications
+```
+
 ### YAML Flow Definitions
 
-Create flow definitions in YAML for easy configuration:
+Create flow definitions in YAML for easy configuration, including groups and nested flows:
 
 ```yaml
 # flow_definitions/user_processing.yaml
@@ -110,11 +197,16 @@ send:
   is_active: true
 
 steps:
-  - condition:
-      field: email
-      operator: contains
-      value: "@"
-    then:
+  # Use a pre-defined group
+  - type: group
+    name: user-validation
+    
+  # Create a nested flow
+  - type: nested
+    steps:
+      - type: closure
+        action: append
+        value: "_processed"
       - condition:
           field: is_active
           operator: equals
@@ -125,10 +217,23 @@ steps:
         else:
           - type: closure
             action: lowercase
-    else:
-      - type: closure
-        action: append
-        value: " - Invalid email"
+            
+  # Use another group
+  - type: group
+    name: notifications
+```
+
+Define groups in separate YAML files:
+
+```yaml
+# groups/user-validation.yaml
+group: user-validation
+description: Validate user data
+steps:
+  - type: closure
+    action: validate_email
+  - type: closure
+    action: validate_name
 ```
 
 ### Artisan Commands
@@ -301,6 +406,8 @@ Laravel Flowpipe is optimized for performance:
 - `make()` - Create a new flowpipe instance
 - `send($data)` - Set initial data
 - `through(array $steps)` - Add steps to the pipeline
+- `useGroup(string $name)` - Add a predefined group to the pipeline
+- `nested(array $steps)` - Create a nested flow
 - `cache($key, $ttl, $store)` - Add cache step
 - `retry($maxAttempts, $delayMs, $shouldRetry)` - Add retry step
 - `rateLimit($key, $maxAttempts, $decayMinutes, $keyGenerator)` - Add rate limit step
@@ -310,6 +417,13 @@ Laravel Flowpipe is optimized for performance:
 - `withTracer(Tracer $tracer)` - Add a tracer
 - `thenReturn()` - Execute and return result
 - `context()` - Get flow context
+
+### Static Methods
+
+- `group(string $name, array $steps)` - Define a reusable step group
+- `hasGroup(string $name)` - Check if a group exists
+- `getGroups()` - Get all registered groups
+- `clearGroups()` - Clear all registered groups (useful for testing)
 
 ### Conditional Steps
 

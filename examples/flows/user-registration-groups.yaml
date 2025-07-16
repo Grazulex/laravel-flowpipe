@@ -1,0 +1,98 @@
+# Example: User Registration Flow with Groups and Nested Flows
+# This YAML defines a complete user registration workflow
+
+flow: UserRegistrationFlow
+description: Register new users with validation, setup, and notifications
+
+send:
+  name: "John Doe"
+  email: "john.doe@example.com"
+  password: "securepassword123"
+  terms_accepted: true
+  marketing_consent: true
+
+steps:
+  # Step 1: Validate user input
+  - type: group
+    name: user-validation
+    
+  # Step 2: Password processing in nested flow (for security isolation)
+  - type: nested
+    description: Process password securely
+    steps:
+      - type: closure
+        action: hash_password
+        
+      - type: closure
+        action: remove_plain_password
+        
+      - type: closure
+        action: set_password_metadata
+        
+      - condition:
+          field: password_strength
+          operator: equals
+          value: "weak"
+        then:
+          - type: closure
+            action: require_password_change
+            
+  # Step 3: Set up user account
+  - type: group
+    name: user-setup
+    
+  # Step 4: Create user profile in nested flow
+  - type: nested
+    description: Set up user profile
+    steps:
+      - type: closure
+        action: create_profile
+        
+      - type: closure
+        action: generate_profile_urls
+        
+      - type: closure
+        action: set_privacy_settings
+        
+      - condition:
+          field: marketing_consent
+          operator: equals
+          value: true
+        then:
+          - type: closure
+            action: add_to_marketing_list
+            
+  # Step 5: Handle permissions and roles
+  - type: nested
+    description: Set user permissions
+    steps:
+      - type: closure
+        action: assign_default_role
+        
+      - type: closure
+        action: set_permissions
+        
+      - type: closure
+        action: set_quota_limits
+        
+      - condition:
+          field: terms_accepted
+          operator: equals
+          value: true
+        then:
+          - type: closure
+            action: activate_account
+        else:
+          - type: closure
+            action: require_terms_acceptance
+            
+  # Step 6: Send notifications
+  - type: group
+    name: user-notifications
+    
+  # Step 7: Final setup
+  - type: closure
+    action: complete_registration
+    
+  - type: closure
+    action: log_registration

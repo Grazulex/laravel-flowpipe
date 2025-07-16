@@ -1,14 +1,41 @@
-# Example: Order Processing Group
-# File: flow_definitions/groups/order-processing.yaml
+# Example: Enhanced Order Processing Group
+# File: groups/order-processing.yaml
 
 group: order-processing
-description: Processes e-commerce orders
+description: Comprehensive e-commerce order processing workflow
+
 steps:
-  - type: step
-    class: ValidateOrderStep
-  - type: step
-    class: ProcessPaymentStep
-  - type: step
-    class: UpdateInventoryStep
-  - type: step
-    class: CreateOrderStep
+  # Validate order data
+  - type: closure
+    action: validate_order_data
+    description: Validate order structure and required fields
+    
+  # Check inventory availability
+  - type: closure
+    action: check_inventory
+    description: Verify all items are in stock
+    
+  # Reserve inventory items
+  - type: closure
+    action: reserve_inventory
+    description: Reserve items for this order
+    
+  # Process payment
+  - type: closure
+    action: process_payment
+    description: Process payment through payment gateway
+    
+  # Update inventory levels
+  - type: closure
+    action: update_inventory
+    description: Update inventory quantities after successful payment
+    
+  # Create order record
+  - type: closure
+    action: create_order_record
+    description: Create order record in database
+    
+  # Generate order confirmation
+  - type: closure
+    action: generate_confirmation
+    description: Generate order confirmation details
