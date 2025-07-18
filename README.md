@@ -4,52 +4,68 @@
   <img src="new_logo.png" alt="Laravel Flowpipe" width="100">
   <p><strong>Composable, traceable and declarative Flow Pipelines for Laravel. A modern alternative to Laravel's Pipeline, with support for conditional steps, nested flows, tracing, validation, and more.</strong></p>
 
-  <a href="https://github.com/Grazulex/laravel-flowpipe/actions/workflows/tests.yml"><img src="https://github.com/Grazulex/laravel-flowpipe/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
-  <a href="https://github.com/Grazulex/laravel-flowpipe/actions/workflows/code-quality.yml"><img src="https://github.com/Grazulex/laravel-flowpipe/actions/workflows/code-quality.yml/badge.svg" alt="Code Quality"></a>
-  <a href="https://packagist.org/packages/grazulex/laravel-flowpipe"><img src="https://img.shields.io/packagist/v/grazulex/laravel-flowpipe.svg?style=flat-square" alt="Latest Version on Packagist"></a>
-  <a href="https://packagist.org/packages/grazulex/laravel-flowpipe"><img src="https://img.shields.io/packagist/dt/grazulex/laravel-flowpipe.svg?style=flat-square" alt="Total Downloads"></a>
+  [![Latest Version](https://img.shields.io/packagist/v/grazulex/laravel-flowpipe)](https://packagist.org/packages/grazulex/laravel-flowpipe)
+  [![Total Downloads](https://img.shields.io/packagist/dt/grazulex/laravel-flowpipe)](https://packagist.org/packages/grazulex/laravel-flowpipe)
+  [![License](https://img.shields.io/github/license/grazulex/laravel-flowpipe)](LICENSE.md)
+  [![PHP Version](https://img.shields.io/badge/php-%5E8.3-blue)](https://php.net)
+  [![Laravel Version](https://img.shields.io/badge/laravel-%5E12.19-red)](https://laravel.com)
+  [![Tests](https://github.com/Grazulex/laravel-arc/workflows/Tests/badge.svg)](https://github.com/Grazulex/laravel-arc/actions)
+  [![Code Style](https://img.shields.io/badge/code%20style-pint-orange)](https://github.com/laravel/pint)
+
 </div>
 
+<div style="background: linear-gradient(135deg, #FF9900 0%, #D2D200 25%, #88C600 50%, #00B470 100%); padding: 2rem; border-radius: 10px; margin: 2rem 0; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
 
-## Features
+## 🚀 Overview
 
-✨ **Fluent API** - Chainable, expressive syntax  
-🔄 **Flexible Steps** - Support for closures, classes, and custom steps  
-🎯 **Conditional Logic** - Built-in conditional step execution with dot notation  
-📊 **Tracing & Debugging** - Track execution flow and performance  
-🧪 **Test-Friendly** - Built-in test tracer for easy testing  
-🚀 **Laravel Integration** - Seamless service provider integration  
-⚡ **Performance** - Optimized for speed and memory efficiency  
-📋 **YAML Flows** - Define flows in YAML for easy configuration  
-🎨 **Artisan Commands** - Full CLI support for flow management  
-✅ **Flow Validation** - Validate flow definitions with comprehensive error reporting  
-📈 **Export & Documentation** - Export to JSON, Mermaid, and Markdown  
-🔗 **Step Groups** - Reusable, named collections of steps  
-🎯 **Nested Flows** - Create isolated sub-workflows for complex logic  
-🛡️ **Advanced Error Handling** - Comprehensive error handling with retry, fallback, and compensation strategies  
-🔄 **Retry Strategies** - Exponential and linear backoff, custom retry logic  
-🎯 **Fallback Patterns** - Graceful degradation with fallback mechanisms  
-🔧 **Compensation** - Automatic rollback and cleanup operations  
-🎨 **Composite Strategies** - Combine multiple error handling approaches  
+<strong style="color: #FFFFFF;">Laravel Flowpipe</strong> is a powerful, modern alternative to Laravel's built-in Pipeline package that provides <span style="color: #FFE066;">composable</span>, <span style="color: #B8E066;">traceable</span>, and <span style="color: #66E0B8;">declarative</span> flow pipelines. It extends the traditional pipeline concept with advanced features like <strong style="color: #FFCC66;">conditional logic</strong>, <strong style="color: #CCFF66;">nested workflows</strong>, <strong style="color: #66FFCC;">comprehensive error handling</strong>, and <strong style="color: #66CCFF;">YAML-based flow definitions</strong>.
 
-## Requirements
+Perfect for building complex business workflows, data processing pipelines, user registration flows, API integrations, and any scenario where you need reliable, maintainable, and testable step-by-step processing.
 
-- PHP 8.3+
-- Laravel 12.0+
+</div>
 
-## Installation
+## <span style="color: #FF9900;">✨ Features</span>
 
-Install the package via Composer:
+✨ **<span style="color: #FF9900;">Fluent API</span>** - Chainable, expressive syntax  
+🔄 **<span style="color: #D2D200;">Flexible Steps</span>** - Support for closures, classes, and custom steps  
+🎯 **<span style="color: #88C600;">Conditional Logic</span>** - Built-in conditional step execution with dot notation  
+📊 **<span style="color: #00B470;">Tracing & Debugging</span>** - Track execution flow and performance  
+🧪 **<span style="color: #FF9900;">Test-Friendly</span>** - Built-in test tracer for easy testing  
+🚀 **<span style="color: #D2D200;">Laravel Integration</span>** - Seamless service provider integration  
+⚡ **<span style="color: #88C600;">Performance</span>** - Optimized for speed and memory efficiency  
+📋 **<span style="color: #00B470;">YAML Flows</span>** - Define flows in YAML for easy configuration  
+🎨 **<span style="color: #FF9900;">Artisan Commands</span>** - Full CLI support for flow management  
+✅ **<span style="color: #D2D200;">Flow Validation</span>** - Validate flow definitions with comprehensive error reporting  
+📈 **<span style="color: #88C600;">Export & Documentation</span>** - Export to JSON, Mermaid, and Markdown  
+🔗 **<span style="color: #00B470;">Step Groups</span>** - Reusable, named collections of steps  
+🎯 **<span style="color: #FF9900;">Nested Flows</span>** - Create isolated sub-workflows for complex logic  
+🛡️ **<span style="color: #D2D200;">Advanced Error Handling</span>** - Comprehensive error handling with retry, fallback, and compensation strategies  
+🔄 **<span style="color: #88C600;">Retry Strategies</span>** - Exponential and linear backoff, custom retry logic  
+🎯 **<span style="color: #00B470;">Fallback Patterns</span>** - Graceful degradation with fallback mechanisms  
+🔧 **<span style="color: #FF9900;">Compensation</span>** - Automatic rollback and cleanup operations  
+🎨 **<span style="color: #D2D200;">Composite Strategies</span>** - Combine multiple error handling approaches  
+
+## <span style="color: #D2D200;">📋 Requirements</span>
+
+- **<span style="color: #FF9900;">PHP 8.3+</span>**
+- **<span style="color: #88C600;">Laravel 12.0+</span>**
+
+## <span style="color: #88C600;">🚀 Installation</span>
+
+Install the package via **<span style="color: #FF9900;">Composer</span>**:
 
 ```bash
 composer require grazulex/laravel-flowpipe
 ```
 
-The service provider will be automatically registered thanks to Laravel's package auto-discovery.
+> <div style="border-left: 4px solid #88C600; padding: 1rem; background: #f8f9fa; margin: 1rem 0;">
+> <strong style="color: #88C600;">💡 Auto-Discovery</strong><br>
+> The service provider will be automatically registered thanks to Laravel's package auto-discovery.
+> </div>
 
-## Quick Start
+## <span style="color: #00B470;">⚡ Quick Start</span>
 
-### Basic Pipeline
+### <span style="color: #FF9900;">Basic Pipeline</span>
 
 ```php
 use Grazulex\LaravelFlowpipe\Flowpipe;
@@ -66,7 +82,7 @@ $result = Flowpipe::make()
 // Result: "HELLO-WORLD!"
 ```
 
-### Error Handling with Retry
+### <span style="color: #D2D200;">🛡️ Error Handling with Retry</span>
 
 ```php
 use Grazulex\LaravelFlowpipe\Flowpipe;
@@ -91,7 +107,7 @@ $result = Flowpipe::make()
     ->thenReturn();
 ```
 
-### Fallback Strategies
+### <span style="color: #88C600;">🎯 Fallback Strategies</span>
 
 ```php
 use Grazulex\LaravelFlowpipe\Flowpipe;
@@ -115,7 +131,7 @@ $result = Flowpipe::make()
     ->thenReturn();
 ```
 
-### Compensation (Rollback) Strategies
+### <span style="color: #00B470;">🔄 Compensation (Rollback) Strategies</span>
 
 ```php
 use Grazulex\LaravelFlowpipe\Flowpipe;
@@ -143,7 +159,7 @@ $result = Flowpipe::make()
     ->thenReturn();
 ```
 
-### Composite Error Handling
+### <span style="color: #FF9900;">🎨 Composite Error Handling</span>
 
 ```php
 use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\CompositeStrategy;
@@ -164,7 +180,7 @@ $result = Flowpipe::make()
     ->thenReturn();
 ```
 
-### Conditional Steps
+### <span style="color: #88C600;">❓ Conditional Steps</span>
 
 ```php
 use Grazulex\LaravelFlowpipe\Steps\ConditionalStep;
@@ -196,11 +212,11 @@ $result = Flowpipe::make()
 // Result: "JOHN"
 ```
 
-### Step Groups & Nested Flows
+### <span style="color: #88C600;">🔗 Step Groups & Nested Flows</span>
 
-Laravel Flowpipe supports reusable step groups and nested flows for better organization and modularity.
+**<span style="color: #00B470;">Laravel Flowpipe</span>** supports reusable step groups and nested flows for better organization and modularity.
 
-#### Step Groups
+#### <span style="color: #FF9900;">Step Groups</span>
 
 Define reusable groups of steps:
 
@@ -232,7 +248,7 @@ $result = Flowpipe::make()
 // Result: "HELLO-WORLD!"
 ```
 
-#### Nested Flows
+#### <span style="color: #88C600;">Nested Flows</span>
 
 Create isolated sub-workflows:
 
@@ -253,7 +269,7 @@ $result = Flowpipe::make()
 // Result: "HELLO-WORLD!"
 ```
 
-#### Combining Groups and Nested Flows
+#### <span style="color: #88C600;">Combining Groups and Nested Flows</span>
 
 ```php
 // Define processing groups
@@ -281,9 +297,9 @@ $result = Flowpipe::make()
 // Result: Complete user array with validation, processing, and notifications
 ```
 
-### YAML Flow Definitions
+### <span style="color: #00B470;">📋 YAML Flow Definitions</span>
 
-Create flow definitions in YAML for easy configuration, including groups and nested flows:
+Create flow definitions in **<span style="color: #FF9900;">YAML</span>** for easy configuration, including groups and nested flows:
 
 ```yaml
 # flow_definitions/user_processing.yaml
@@ -335,9 +351,9 @@ steps:
     action: validate_name
 ```
 
-### Artisan Commands
+### <span style="color: #FF9900;">🎨 Artisan Commands</span>
 
-Laravel Flowpipe comes with powerful Artisan commands:
+**<span style="color: #D2D200;">Laravel Flowpipe</span>** comes with powerful Artisan commands:
 
 ```bash
 # List all available flows
@@ -371,36 +387,36 @@ php artisan flowpipe:make-flow AdvancedFlow --template=advanced
 php artisan flowpipe:make-step ProcessUserStep
 ```
 
-### Enhanced Mermaid Export with Group Colors
+### <span style="color: #D2D200;">🎨 Enhanced Mermaid Export with Group Colors</span>
 
-Laravel Flowpipe now supports enhanced Mermaid diagrams with rich color coding for different step types:
+**<span style="color: #88C600;">Laravel Flowpipe</span>** now supports enhanced Mermaid diagrams with rich color coding for different step types:
 
-- **Groups**: Blue theme (📦 Group elements)
-- **Nested Flows**: Green theme (🔄 Nested elements)
-- **Conditional Steps**: Orange theme (❓ Conditional elements)
-- **Transform Steps**: Pink theme (🔄 Transform elements)
-- **Validation Steps**: Green theme (✅ Validation elements)
-- **Cache Steps**: Yellow theme (💾 Cache elements)
-- **Batch Steps**: Purple theme (📊 Batch elements)
-- **Retry Steps**: Red theme (🔄 Retry elements)
+- **<span style="color: #FF9900;">Groups</span>**: Blue theme (📦 Group elements)
+- **<span style="color: #D2D200;">Nested Flows</span>**: Green theme (🔄 Nested elements)
+- **<span style="color: #88C600;">Conditional Steps</span>**: Orange theme (❓ Conditional elements)
+- **<span style="color: #00B470;">Transform Steps</span>**: Pink theme (🔄 Transform elements)
+- **<span style="color: #FF9900;">Validation Steps</span>**: Green theme (✅ Validation elements)
+- **<span style="color: #D2D200;">Cache Steps</span>**: Yellow theme (💾 Cache elements)
+- **<span style="color: #88C600;">Batch Steps</span>**: Purple theme (📊 Batch elements)
+- **<span style="color: #00B470;">Retry Steps</span>**: Red theme (🔄 Retry elements)
 
-## Documentation
+## <span style="color: #88C600;">📚 Documentation</span>
 
 For detailed documentation, examples, and advanced usage, please see:
 
-- 📚 [Full Documentation](docs/README.md)
-- 🎯 [Examples](examples/README.md)
-- 🔧 [Configuration](docs/configuration.md)
-- 🧪 [Testing](docs/testing.md)
-- 🎨 [Artisan Commands](docs/commands.md)
-- 🛡️ [Error Handling](docs/error-handling.md)
-- 🔄 [Queue Integration](docs/queues.md)
-- 📖 [Error Handling Usage Guide](docs/error-handling-usage.md)
-- 🎯 [Usage Examples](docs/usage-examples.md)
+- 📚 **<span style="color: #FF9900;">[Full Documentation](docs/README.md)</span>**
+- 🎯 **<span style="color: #D2D200;">[Examples](examples/README.md)</span>**
+- 🔧 **<span style="color: #88C600;">[Configuration](docs/configuration.md)</span>**
+- 🧪 **<span style="color: #00B470;">[Testing](docs/testing.md)</span>**
+- 🎨 **<span style="color: #FF9900;">[Artisan Commands](docs/commands.md)</span>**
+- 🛡️ **<span style="color: #D2D200;">[Error Handling](docs/error-handling.md)</span>**
+- 🔄 **<span style="color: #88C600;">[Queue Integration](docs/queues.md)</span>**
+- 📖 **<span style="color: #00B470;">[Error Handling Usage Guide](docs/error-handling-usage.md)</span>**
+- 🎯 **<span style="color: #FF9900;">[Usage Examples](docs/usage-examples.md)</span>**
 
-## Examples
+## <span style="color: #00B470;">💡 Examples</span>
 
-### Basic Text Processing
+### <span style="color: #FF9900;">Basic Text Processing</span>
 
 ```php
 $result = Flowpipe::make()
@@ -415,7 +431,7 @@ $result = Flowpipe::make()
 // Result: "Hello-World"
 ```
 
-### User Registration Flow
+### <span style="color: #D2D200;">User Registration Flow</span>
 
 ```php
 use App\Flowpipe\Steps\ValidateUserStep;
@@ -450,7 +466,7 @@ $user = Flowpipe::make()
     ->thenReturn();
 ```
 
-### Complex Conditional Logic
+### <span style="color: #88C600;">Complex Conditional Logic</span>
 
 ```php
 use Grazulex\LaravelFlowpipe\Steps\ConditionalStep;
@@ -492,7 +508,7 @@ $result = Flowpipe::make()
     ->thenReturn();
 ```
 
-### Error Handling in Production Workflows
+### <span style="color: #00B470;">Error Handling in Production Workflows</span>
 
 ```php
 use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\CompositeStrategy;
@@ -551,7 +567,7 @@ $orderResult = Flowpipe::make()
     ->thenReturn();
 ```
 
-### Custom Error Handling Strategies
+### <span style="color: #FF9900;">Custom Error Handling Strategies</span>
 
 ```php
 use Grazulex\LaravelFlowpipe\ErrorHandling\Strategies\RetryStrategy;
@@ -586,9 +602,9 @@ $result = Flowpipe::make()
     ->thenReturn();
 ```
 
-## Testing
+## <span style="color: #D2D200;">🧪 Testing</span>
 
-Laravel Flowpipe includes a dedicated test tracer for easy testing:
+**<span style="color: #88C600;">Laravel Flowpipe</span>** includes a dedicated test tracer for easy testing:
 
 ```php
 use Grazulex\LaravelFlowpipe\Tracer\TestTracer;
@@ -610,18 +626,18 @@ public function test_user_processing_flow()
 }
 ```
 
-## Performance
+## <span style="color: #88C600;">⚡ Performance</span>
 
-Laravel Flowpipe is optimized for performance:
+**<span style="color: #00B470;">Laravel Flowpipe</span>** is optimized for performance:
 
-- **Lazy Evaluation**: Steps are only executed when needed
-- **Memory Efficient**: Minimal memory footprint
-- **Traceable**: Optional tracing with minimal overhead
-- **Cacheable**: Flow definitions can be cached for better performance
+- **<span style="color: #FF9900;">Lazy Evaluation</span>**: Steps are only executed when needed
+- **<span style="color: #D2D200;">Memory Efficient</span>**: Minimal memory footprint
+- **<span style="color: #88C600;">Traceable</span>**: Optional tracing with minimal overhead
+- **<span style="color: #00B470;">Cacheable</span>**: Flow definitions can be cached for better performance
 
-## API Reference
+## <span style="color: #00B470;">📖 API Reference</span>
 
-### Flowpipe Methods
+### <span style="color: #FF9900;">Flowpipe Methods</span>
 
 - `make()` - Create a new flowpipe instance
 - `send($data)` - Set initial data
@@ -638,95 +654,95 @@ Laravel Flowpipe is optimized for performance:
 - `thenReturn()` - Execute and return result
 - `context()` - Get flow context
 
-### Error Handling Methods
+### <span style="color: #D2D200;">Error Handling Methods</span>
 
-- `withErrorHandler(ErrorHandlerStrategy $strategy, int $maxAttempts = 3)` - Add custom error handler
-- `withRetryStrategy(RetryStrategy $strategy)` - Add retry strategy
-- `withFallback(Closure $fallbackHandler, ?Closure $shouldFallback = null)` - Add fallback handling
-- `withCompensation(Closure $compensationHandler, ?Closure $shouldCompensate = null)` - Add compensation handling
-- `withCompositeErrorHandler(array $strategies = [])` - Add composite error handling
-- `exponentialBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, float $multiplier = 2.0, ?Closure $shouldRetry = null)` - Add exponential backoff retry
-- `linearBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, int $increment = 100, ?Closure $shouldRetry = null)` - Add linear backoff retry
-- `fallbackOnException(string $exceptionClass, Closure $fallbackHandler)` - Add exception-specific fallback
-- `compensateOnException(string $exceptionClass, Closure $compensationHandler)` - Add exception-specific compensation
+- **<span style="color: #FF9900;">`withErrorHandler(ErrorHandlerStrategy $strategy, int $maxAttempts = 3)`</span>** - Add custom error handler
+- **<span style="color: #88C600;">`withRetryStrategy(RetryStrategy $strategy)`</span>** - Add retry strategy
+- **<span style="color: #00B470;">`withFallback(Closure $fallbackHandler, ?Closure $shouldFallback = null)`</span>** - Add fallback handling
+- **<span style="color: #FF9900;">`withCompensation(Closure $compensationHandler, ?Closure $shouldCompensate = null)`</span>** - Add compensation handling
+- **<span style="color: #D2D200;">`withCompositeErrorHandler(array $strategies = [])`</span>** - Add composite error handling
+- **<span style="color: #88C600;">`exponentialBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, float $multiplier = 2.0, ?Closure $shouldRetry = null)`</span>** - Add exponential backoff retry
+- **<span style="color: #00B470;">`linearBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, int $increment = 100, ?Closure $shouldRetry = null)`</span>** - Add linear backoff retry
+- **<span style="color: #FF9900;">`fallbackOnException(string $exceptionClass, Closure $fallbackHandler)`</span>** - Add exception-specific fallback
+- **<span style="color: #D2D200;">`compensateOnException(string $exceptionClass, Closure $compensationHandler)`</span>** - Add exception-specific compensation
 
-### Static Methods
+### <span style="color: #88C600;">Static Methods</span>
 
-- `group(string $name, array $steps)` - Define a reusable step group
-- `hasGroup(string $name)` - Check if a group exists
-- `getGroups()` - Get all registered groups
-- `clearGroups()` - Clear all registered groups (useful for testing)
+- **<span style="color: #FF9900;">`group(string $name, array $steps)`</span>** - Define a reusable step group
+- **<span style="color: #D2D200;">`hasGroup(string $name)`</span>** - Check if a group exists
+- **<span style="color: #88C600;">`getGroups()`</span>** - Get all registered groups
+- **<span style="color: #00B470;">`clearGroups()`</span>** - Clear all registered groups (useful for testing)
 
-### Conditional Steps
+### <span style="color: #00B470;">Conditional Steps</span>
 
-- `ConditionalStep::when($condition, $step)` - Execute step when condition is true
-- `ConditionalStep::unless($condition, $step)` - Execute step when condition is false
+- **<span style="color: #FF9900;">`ConditionalStep::when($condition, $step)`</span>** - Execute step when condition is true
+- **<span style="color: #D2D200;">`ConditionalStep::unless($condition, $step)`</span>** - Execute step when condition is false
 
-### Error Handling Strategies
+### <span style="color: #FF9900;">Error Handling Strategies</span>
 
-#### RetryStrategy
-- `RetryStrategy::make(int $maxAttempts = 3, int $delayMs = 100, ?Closure $shouldRetry = null, ?Closure $delayCalculator = null)` - Basic retry
-- `RetryStrategy::exponentialBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, float $multiplier = 2.0, ?Closure $shouldRetry = null)` - Exponential backoff
-- `RetryStrategy::linearBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, int $increment = 100, ?Closure $shouldRetry = null)` - Linear backoff
-- `RetryStrategy::forException(string $exceptionClass, int $maxAttempts = 3, int $delayMs = 100)` - Exception-specific retry
+#### <span style="color: #D2D200;">RetryStrategy</span>
+- **<span style="color: #88C600;">`RetryStrategy::make(int $maxAttempts = 3, int $delayMs = 100, ?Closure $shouldRetry = null, ?Closure $delayCalculator = null)`</span>** - Basic retry
+- **<span style="color: #00B470;">`RetryStrategy::exponentialBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, float $multiplier = 2.0, ?Closure $shouldRetry = null)`</span>** - Exponential backoff
+- **<span style="color: #FF9900;">`RetryStrategy::linearBackoff(int $maxAttempts = 3, int $baseDelayMs = 100, int $increment = 100, ?Closure $shouldRetry = null)`</span>** - Linear backoff
+- **<span style="color: #D2D200;">`RetryStrategy::forException(string $exceptionClass, int $maxAttempts = 3, int $delayMs = 100)`</span>** - Exception-specific retry
 
-#### FallbackStrategy
-- `FallbackStrategy::make(Closure $fallbackHandler, ?Closure $shouldFallback = null)` - Custom fallback
-- `FallbackStrategy::withDefault(mixed $defaultValue, ?Closure $shouldFallback = null)` - Default value fallback
-- `FallbackStrategy::withTransform(Closure $transformer, ?Closure $shouldFallback = null)` - Transform fallback
-- `FallbackStrategy::withPayload(mixed $fallbackPayload, ?Closure $shouldFallback = null)` - Payload fallback
-- `FallbackStrategy::forException(string $exceptionClass, Closure $fallbackHandler)` - Exception-specific fallback
+#### <span style="color: #88C600;">FallbackStrategy</span>
+- **<span style="color: #00B470;">`FallbackStrategy::make(Closure $fallbackHandler, ?Closure $shouldFallback = null)`</span>** - Custom fallback
+- **<span style="color: #FF9900;">`FallbackStrategy::withDefault(mixed $defaultValue, ?Closure $shouldFallback = null)`</span>** - Default value fallback
+- **<span style="color: #D2D200;">`FallbackStrategy::withTransform(Closure $transformer, ?Closure $shouldFallback = null)`</span>** - Transform fallback
+- **<span style="color: #88C600;">`FallbackStrategy::withPayload(mixed $fallbackPayload, ?Closure $shouldFallback = null)`</span>** - Payload fallback
+- **<span style="color: #00B470;">`FallbackStrategy::forException(string $exceptionClass, Closure $fallbackHandler)`</span>** - Exception-specific fallback
 
-#### CompensationStrategy
-- `CompensationStrategy::make(Closure $compensationHandler, ?Closure $shouldCompensate = null)` - Basic compensation
-- `CompensationStrategy::rollback(Closure $rollbackHandler, ?Closure $shouldCompensate = null)` - Rollback compensation
-- `CompensationStrategy::cleanup(Closure $cleanupHandler, ?Closure $shouldCompensate = null)` - Cleanup compensation
-- `CompensationStrategy::forException(string $exceptionClass, Closure $compensationHandler)` - Exception-specific compensation
+#### <span style="color: #00B470;">CompensationStrategy</span>
+- **<span style="color: #FF9900;">`CompensationStrategy::make(Closure $compensationHandler, ?Closure $shouldCompensate = null)`</span>** - Basic compensation
+- **<span style="color: #D2D200;">`CompensationStrategy::rollback(Closure $rollbackHandler, ?Closure $shouldCompensate = null)`</span>** - Rollback compensation
+- **<span style="color: #88C600;">`CompensationStrategy::cleanup(Closure $cleanupHandler, ?Closure $shouldCompensate = null)`</span>** - Cleanup compensation
+- **<span style="color: #00B470;">`CompensationStrategy::forException(string $exceptionClass, Closure $compensationHandler)`</span>** - Exception-specific compensation
 
-#### CompositeStrategy
-- `CompositeStrategy::make(array $strategies = [])` - Create composite strategy
-- `CompositeStrategy::addStrategy(ErrorHandlerStrategy $strategy)` - Add strategy to composite
-- `CompositeStrategy::retry(RetryStrategy $strategy)` - Add retry strategy
-- `CompositeStrategy::fallback(FallbackStrategy $strategy)` - Add fallback strategy
-- `CompositeStrategy::compensate(CompensationStrategy $strategy)` - Add compensation strategy
+#### <span style="color: #FF9900;">CompositeStrategy</span>
+- **<span style="color: #D2D200;">`CompositeStrategy::make(array $strategies = [])`</span>** - Create composite strategy
+- **<span style="color: #88C600;">`CompositeStrategy::addStrategy(ErrorHandlerStrategy $strategy)`</span>** - Add strategy to composite
+- **<span style="color: #D2D200;">`CompositeStrategy::retry(RetryStrategy $strategy)`</span>** - Add retry strategy
+- **<span style="color: #88C600;">`CompositeStrategy::fallback(FallbackStrategy $strategy)`</span>** - Add fallback strategy
+- **<span style="color: #00B470;">`CompositeStrategy::compensate(CompensationStrategy $strategy)`</span>** - Add compensation strategy
 
-### Tracer Methods
+### <span style="color: #88C600;">Tracer Methods</span>
 
-- `trace($stepClass, $before, $after, $duration)` - Trace step execution
-- `all()` - Get all trace logs
-- `steps()` - Get all step names
-- `count()` - Get number of traced steps
-- `firstStep()` - Get first step name
-- `lastStep()` - Get last step name
-- `clear()` - Clear all traces
+- **<span style="color: #FF9900;">`trace($stepClass, $before, $after, $duration)`</span>** - Trace step execution
+- **<span style="color: #D2D200;">`all()`</span>** - Get all trace logs
+- **<span style="color: #88C600;">`steps()`</span>** - Get all step names
+- **<span style="color: #00B470;">`count()`</span>** - Get number of traced steps
+- **<span style="color: #FF9900;">`firstStep()`</span>** - Get first step name
+- **<span style="color: #D2D200;">`lastStep()`</span>** - Get last step name
+- **<span style="color: #88C600;">`clear()`</span>** - Clear all traces
 
-## Contributing
+## <span style="color: #00B470;">🤝 Contributing</span>
 
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Please see **<span style="color: #FF9900;">[CONTRIBUTING.md](CONTRIBUTING.md)</span>** for details.
 
-## Security
+## <span style="color: #FF9900;">🔒 Security</span>
 
-If you discover any security-related issues, please email jms@grazulex.be instead of using the issue tracker.
+If you discover any security-related issues, please email **<span style="color: #D2D200;">jms@grazulex.be</span>** instead of using the issue tracker.
 
-## Changelog
+## <span style="color: #88C600;">📝 Changelog</span>
 
-Please see [RELEASES.md](RELEASES.md) for more information on what has changed recently.
+Please see **<span style="color: #00B470;">[RELEASES.md](RELEASES.md)</span>** for more information on what has changed recently.
 
-## License
+## <span style="color: #00B470;">📄 License</span>
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+The **<span style="color: #FF9900;">MIT License (MIT)</span>**. Please see **<span style="color: #D2D200;">[License File](LICENSE.md)</span>** for more information.
 
-## Credits
+## <span style="color: #FF9900;">👥 Credits</span>
 
-- [Jean-Marc Strauven](https://github.com/Grazulex)
-- [All Contributors](../../contributors)
+- **<span style="color: #88C600;">[Jean-Marc Strauven](https://github.com/Grazulex)</span>**
+- **<span style="color: #00B470;">[All Contributors](../../contributors)</span>**
 
-## Support
+## <span style="color: #D2D200;">💬 Support</span>
 
-- 🐛 [Report Issues](https://github.com/Grazulex/laravel-flowpipe/issues)
-- 💬 [Discussions](https://github.com/Grazulex/laravel-flowpipe/discussions)
-- 📚 [Documentation](https://github.com/Grazulex/laravel-flowpipe/wiki)
+- 🐛 **<span style="color: #FF9900;">[Report Issues](https://github.com/Grazulex/laravel-flowpipe/issues)</span>**
+- 💬 **<span style="color: #88C600;">[Discussions](https://github.com/Grazulex/laravel-flowpipe/discussions)</span>**
+- 📚 **<span style="color: #00B470;">[Documentation](https://github.com/Grazulex/laravel-flowpipe/wiki)</span>**
 
 ---
 
-**Laravel Flowpipe** is a modern, powerful alternative to Laravel's built-in Pipeline with enhanced features for complex workflow management.
+**<span style="color: #FF9900;">Laravel Flowpipe</span>** is a modern, powerful alternative to Laravel's built-in Pipeline with enhanced features for complex workflow management.
