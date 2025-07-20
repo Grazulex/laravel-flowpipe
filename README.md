@@ -82,6 +82,45 @@ $result = Flowpipe::make()
 // Result: "HELLO-WORLD!"
 ```
 
+### <span style="color: #88C600;">🎯 Factory Methods</span>
+
+**<span style="color: #D2D200;">Laravel Flowpipe</span>** provides convenient factory methods for creating instances with specific tracers:
+
+```php
+use Grazulex\LaravelFlowpipe\Flowpipe;
+
+// Create with debug tracing (logs to file or console)
+$debugFlow = Flowpipe::debug(true, 'flowpipe'); // logToFile=true, channel='flowpipe'
+$result = $debugFlow
+    ->send($data)
+    ->through($steps)
+    ->thenReturn();
+
+// Create with performance tracing
+$perfFlow = Flowpipe::performance();
+$result = $perfFlow
+    ->send($data)
+    ->through($steps)
+    ->thenReturn();
+
+// Create with database tracing
+$dbFlow = Flowpipe::database('custom_traces_table');
+$result = $dbFlow
+    ->send($data)
+    ->through($steps)
+    ->thenReturn();
+
+// Create with test tracing (for unit tests)
+$testFlow = Flowpipe::test();
+$result = $testFlow
+    ->send($data)
+    ->through($steps)
+    ->thenReturn();
+
+// Standard make method (no tracing by default)
+$flow = Flowpipe::make(); // or Flowpipe::make($customTracer)
+```
+
 ### <span style="color: #D2D200;">🛡️ Error Handling with Retry</span>
 
 ```php
@@ -508,6 +547,82 @@ $result = Flowpipe::make()
     ->thenReturn();
 ```
 
+### <span style="color: #88C600;">🔧 Built-in Step Types</span>
+
+**<span style="color: #00B470;">Laravel Flowpipe</span>** includes various specialized step types for common operations:
+
+```php
+use Grazulex\LaravelFlowpipe\Flowpipe;
+
+// Cache step - cache expensive operations
+$result = Flowpipe::make()
+    ->send($userData)
+    ->cache('user_profile_' . $userData['id'], 3600) // Cache for 1 hour
+    ->through([
+        fn($data, $next) => $next(fetchUserProfile($data)),
+    ])
+    ->thenReturn();
+
+// Transform step - transform data structure
+$result = Flowpipe::make()
+    ->send($rawData)
+    ->transform(function ($data) {
+        return [
+            'name' => strtoupper($data['name']),
+            'email' => strtolower($data['email']),
+            'created_at' => now(),
+        ];
+    })
+    ->through([
+        fn($data, $next) => $next(saveUser($data)),
+    ])
+    ->thenReturn();
+
+// Validation step - validate data using Laravel validation
+$result = Flowpipe::make()
+    ->send($inputData)
+    ->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users',
+        'age' => 'required|integer|min:18',
+    ])
+    ->through([
+        fn($data, $next) => $next(processValidData($data)),
+    ])
+    ->thenReturn();
+
+// Batch step - process data in batches
+$result = Flowpipe::make()
+    ->send($largeDataset)
+    ->batch(100) // Process 100 items at a time
+    ->through([
+        fn($batch, $next) => $next(processBatch($batch)),
+    ])
+    ->thenReturn();
+
+// Rate limiting step - prevent API abuse
+$result = Flowpipe::make()
+    ->send($apiRequest)
+    ->rateLimit('api_calls', 60, 1) // 60 calls per minute
+    ->through([
+        fn($data, $next) => $next(callExternalAPI($data)),
+    ])
+    ->thenReturn();
+
+// Combine multiple step types
+$result = Flowpipe::make()
+    ->send($complexData)
+    ->validate(['data' => 'required|array'])
+    ->transform(fn($data) => ['processed' => $data['data']])
+    ->cache('complex_operation', 1800)
+    ->batch(50)
+    ->rateLimit('processing', 30, 1)
+    ->through([
+        fn($data, $next) => $next(performComplexOperation($data)),
+    ])
+    ->thenReturn();
+```
+
 ### <span style="color: #00B470;">Error Handling in Production Workflows</span>
 
 ```php
@@ -624,6 +739,19 @@ public function test_user_processing_flow()
     $this->assertEquals('JOHN', $result);
     $this->assertCount(1, $tracer->count());
 }
+
+// Or use the factory method for cleaner tests:
+public function test_user_processing_flow_with_factory()
+{
+    $result = Flowpipe::test()
+        ->send(['name' => 'John'])
+        ->through([
+            fn($data, $next) => $next(strtoupper($data['name'])),
+        ])
+        ->thenReturn();
+    
+    $this->assertEquals('JOHN', $result);
+}
 ```
 
 ## <span style="color: #88C600;">⚡ Performance</span>
@@ -668,10 +796,15 @@ public function test_user_processing_flow()
 
 ### <span style="color: #88C600;">Static Methods</span>
 
-- **<span style="color: #FF9900;">`group(string $name, array $steps)`</span>** - Define a reusable step group
-- **<span style="color: #D2D200;">`hasGroup(string $name)`</span>** - Check if a group exists
-- **<span style="color: #88C600;">`getGroups()`</span>** - Get all registered groups
-- **<span style="color: #00B470;">`clearGroups()`</span>** - Clear all registered groups (useful for testing)
+- **<span style="color: #FF9900;">`make(?Tracer $tracer = null)`</span>** - Create a new flowpipe instance
+- **<span style="color: #D2D200;">`debug(bool $logToFile = false, string $logChannel = 'default')`</span>** - Create instance with debug tracer
+- **<span style="color: #88C600;">`performance()`</span>** - Create instance with performance tracer
+- **<span style="color: #00B470;">`database(string $tableName = 'flowpipe_traces')`</span>** - Create instance with database tracer
+- **<span style="color: #FF9900;">`test()`</span>** - Create instance with test tracer (for testing)
+- **<span style="color: #D2D200;">`group(string $name, array $steps)`</span>** - Define a reusable step group
+- **<span style="color: #88C600;">`hasGroup(string $name)`</span>** - Check if a group exists
+- **<span style="color: #00B470;">`getGroups()`</span>** - Get all registered groups
+- **<span style="color: #FF9900;">`clearGroups()`</span>** - Clear all registered groups (useful for testing)
 
 ### <span style="color: #00B470;">Conditional Steps</span>
 

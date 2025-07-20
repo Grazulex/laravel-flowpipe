@@ -1,0 +1,31 @@
+# Example: Order Validation Group
+# File: groups/order-validation.yaml
+
+group: order-validation
+description: Validate e-commerce order data and requirements
+
+steps:
+  # Validate order structure
+  - type: closure
+    action: validate_order_structure
+    description: Ensure order contains required fields
+    
+  # Validate customer information
+  - type: closure
+    action: validate_customer_info
+    description: Validate customer name, email, and address
+    
+  # Validate items and quantities
+  - type: closure
+    action: validate_items
+    description: Validate item names, prices, and quantities
+    
+  # Calculate and verify total
+  - type: closure
+    action: verify_order_total
+    description: Calculate total and verify against provided total
+    
+  # Check business rules
+  - type: closure
+    action: check_business_rules
+    description: Apply business rules (minimum order, restrictions, etc.)

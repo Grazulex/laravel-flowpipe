@@ -222,23 +222,64 @@ php artisan flowpipe:export user-registration --format=md --output=docs/user-reg
 
 ## Step Groups
 
-The examples demonstrate three types of reusable step groups:
+The examples demonstrate multiple types of reusable step groups organized by functionality:
 
-### User Validation Group (`groups/user-validation.yaml`)
+### User-Related Groups
+
+#### User Validation Group (`groups/user-validation.yaml`)
 - Email format validation
 - Password strength checking
 - Required field validation
 - User existence checking
 - Terms acceptance validation
 
-### Order Processing Group (`groups/order-processing.yaml`)
+#### User Setup Group (`groups/user-setup.yaml`)
+- User ID generation
+- Password hashing
+- Profile creation
+- Default preferences setup
+- API key generation
+
+#### User Notifications Group (`groups/user-notifications.yaml`)
+- Welcome email sending
+- Email verification dispatch
+- Admin notifications
+- Registration event logging
+- User statistics updates
+
+### E-commerce Groups
+
+#### Order Validation Group (`groups/order-validation.yaml`)
+- Order structure validation
+- Customer information validation
+- Item and quantity validation
+- Order total verification
+- Business rules checking
+
+#### Inventory Management Group (`groups/inventory-management.yaml`)
+- Item availability checking
+- Inventory reservation
+- Shipping cost calculation
+- Inventory level updates
+- Inventory reporting
+
+#### Order Notifications Group (`groups/order-notifications.yaml`)
+- Order confirmation emails
+- SMS notifications
+- Customer account updates
+- Warehouse notifications
+- Notification event logging
+
+### General Processing Groups
+
+#### Order Processing Group (`groups/order-processing.yaml`)
 - Order data validation
 - Inventory checking and reservation
 - Payment processing
 - Order record creation
 - Confirmation generation
 
-### Notifications Group (`groups/notifications.yaml`)
+#### Notifications Group (`groups/notifications.yaml`)
 - Welcome email sending
 - Verification email dispatch
 - SMS notifications

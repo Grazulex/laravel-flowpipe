@@ -1,0 +1,31 @@
+# Example: Order Notifications Group  
+# File: groups/order-notifications.yaml
+
+group: order-notifications
+description: Send notifications for e-commerce orders
+
+steps:
+  # Send order confirmation email
+  - type: closure
+    action: send_order_confirmation
+    description: Send order confirmation email to customer
+    
+  # Send SMS notification
+  - type: closure
+    action: send_sms_notification
+    description: Send SMS notification if customer opted in
+    
+  # Update customer account
+  - type: closure
+    action: update_customer_account
+    description: Update customer's order history
+    
+  # Notify warehouse
+  - type: closure
+    action: notify_warehouse
+    description: Notify warehouse team about new order
+    
+  # Log notification events
+  - type: closure
+    action: log_notifications
+    description: Log all notification events for auditing
