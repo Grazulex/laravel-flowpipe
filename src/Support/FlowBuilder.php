@@ -57,6 +57,7 @@ final class FlowBuilder
             'conditional' => $this->buildConditionalStep($stepDefinition),
             'class' => $this->buildClassStep($stepDefinition),
             'step' => $this->buildClassStep($stepDefinition),
+            'action' => $this->buildClassStep($stepDefinition), // Support for official action syntax
             'group' => $this->buildGroupStep($stepDefinition),
             'nested' => $this->buildNestedStep($stepDefinition),
             default => throw new RuntimeException("Unknown step type: {$type}")
@@ -213,10 +214,14 @@ final class FlowBuilder
 
     private function buildClassStep(array $stepDefinition): string
     {
-        $class = $stepDefinition['class'] ?? $stepDefinition['step'] ?? null;
+        // Try to get class name from multiple possible fields (maintain compatibility)
+        $class = $stepDefinition['class']
+            ?? $stepDefinition['step']
+            ?? $stepDefinition['name']
+            ?? null;
 
         if (! $class) {
-            throw new RuntimeException('Class step must have a "class" or "step" field');
+            throw new RuntimeException('Class step must have a "class", "step", or "name" field');
         }
 
         return $this->buildStepFromClass($class);
