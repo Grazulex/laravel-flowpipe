@@ -49,6 +49,7 @@ composer require grazulex/laravel-flowpipe
 
 ## ⚡ Quick Start
 
+### 🚀 Programmatic API
 ```php
 use Grazulex\LaravelFlowpipe\Flowpipe;
 
@@ -64,6 +65,61 @@ $result = Flowpipe::make()
 // Result: "HELLO-WORLD!"
 ```
 
+### 📋 YAML Configuration (Recommended)
+Laravel Flowpipe supports **declarative flow definitions using YAML files**, making your workflows easy to manage, version, and maintain:
+
+**Create a flow definition** (`flow_definitions/user_registration.yaml`):
+```yaml
+name: user_registration
+description: Complete user registration workflow
+steps:
+  - type: validation
+    rules:
+      email: required|email
+      password: required|min:8
+  - type: closure
+    action: App\Actions\CreateUserAccount
+  - type: conditional
+    condition:
+      field: email_verification_required
+      operator: equals
+      value: true
+    then:
+      - type: closure
+        action: App\Actions\SendVerificationEmail
+  - type: group
+    name: notifications
+metadata:
+  version: "1.0"
+  author: "Your Team"
+```
+
+**Execute the flow**:
+```php
+use Grazulex\LaravelFlowpipe\Flowpipe;
+
+$result = Flowpipe::fromDefinition('user_registration')
+    ->send($userData)
+    ->thenReturn();
+```
+
+**📁 Organize with step groups** (`flow_definitions/groups/notifications.yaml`):
+```yaml
+name: notifications
+steps:
+  - type: closure
+    action: App\Actions\SendWelcomeEmail
+  - type: closure
+    action: App\Actions\CreateNotificationPreferences
+```
+
+> **💡 Avantages des fichiers YAML :**
+> - ✅ **Configuration déclarative** - Définissez vos workflows sans code
+> - ✅ **Réutilisabilité** - Partagez des groupes d'étapes entre différents flux
+> - ✅ **Versioning facile** - Trackez les changements dans votre système de contrôle de version
+> - ✅ **Collaboration** - Les non-développeurs peuvent modifier les workflows
+> - ✅ **Validation** - Validation automatique des définitions avec `php artisan flowpipe:validate`
+
 ## 🔧 Requirements
 
 - **PHP 8.3+**
@@ -73,18 +129,22 @@ $result = Flowpipe::make()
 
 For comprehensive documentation, examples, and advanced usage guides, visit our **Wiki**:
 
-### � **[👉 Laravel Flowpipe Wiki](https://github.com/Grazulex/laravel-flowpipe/wiki)**
+### 📖 **[👉 Laravel Flowpipe Wiki](https://github.com/Grazulex/laravel-flowpipe/wiki)**
 
 The wiki includes:
 
-- **📚 [Getting Started Guide](https://github.com/Grazulex/laravel-flowpipe/wiki/Getting-Started)**
-- **🛡️ [Error Handling & Strategies](https://github.com/Grazulex/laravel-flowpipe/wiki/Error-Handling)**
-- **🔗 [Step Groups & Nested Flows](https://github.com/Grazulex/laravel-flowpipe/wiki/Step-Groups-and-Nested-Flows)**
-- **� [YAML Flow Definitions](https://github.com/Grazulex/laravel-flowpipe/wiki/YAML-Flow-Definitions)**
+- **🚀 [Installation & Setup](https://github.com/Grazulex/laravel-flowpipe/wiki/Installation-Setup)**
+- **⚙️ [Configuration](https://github.com/Grazulex/laravel-flowpipe/wiki/Configuration)**
+- **🎯 [Your First Flow](https://github.com/Grazulex/laravel-flowpipe/wiki/Your-First-Flow)**
+- **📋 [Understanding YAML Flows](https://github.com/Grazulex/laravel-flowpipe/wiki/Understanding-YAML-Flows)**
+- **🏗️ [YAML Flow Structure](https://github.com/Grazulex/laravel-flowpipe/wiki/YAML-Flow-Structure)**
+- **🔧 [PHP Steps](https://github.com/Grazulex/laravel-flowpipe/wiki/PHP-Steps)**
+- **🔗 [Step Groups](https://github.com/Grazulex/laravel-flowpipe/wiki/Step-Groups)**
+- **🎯 [Conditions & Branching](https://github.com/Grazulex/laravel-flowpipe/wiki/Conditions-Branching)**
+- **🛡️ [Error Handling](https://github.com/Grazulex/laravel-flowpipe/wiki/Error-Handling)**
 - **🎨 [Artisan Commands](https://github.com/Grazulex/laravel-flowpipe/wiki/Artisan-Commands)**
-- **🧪 [Testing Guide](https://github.com/Grazulex/laravel-flowpipe/wiki/Testing)**
-- **� [Examples & Use Cases](https://github.com/Grazulex/laravel-flowpipe/wiki/Examples)**
-- **� [API Reference](https://github.com/Grazulex/laravel-flowpipe/wiki/API-Reference)**
+- **🚀 [Queue Integration](https://github.com/Grazulex/laravel-flowpipe/wiki/Queue-Integration)**
+- **📝 [Example: User Registration](https://github.com/Grazulex/laravel-flowpipe/wiki/Example-User-Registration)**
 
 ---
 
@@ -121,4 +181,3 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
   <strong>Laravel Flowpipe</strong> - A modern, powerful alternative to Laravel's built-in Pipeline<br>
   with enhanced features for complex workflow management.
 </div>
-
