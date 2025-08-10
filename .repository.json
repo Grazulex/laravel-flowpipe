@@ -1,0 +1,40 @@
+{
+    "tags": [],
+    "group": "",
+    "priority": "medium",
+    "status": "active",
+    "client": "",
+    "description": "",
+    "maintainers": [],
+    "environments": [],
+    "deployment": {
+        "branch": "main",
+        "auto_deploy": false
+    },
+    "metadata": {
+        "created_at": "2025-08-10T05:19:24.046739Z",
+        "updated_at": "2025-08-10T05:19:24.046835Z"
+    },
+    "marketing": {
+        "activities": {
+            "activity_68982bdc0b780": {
+                "platform": "laravel_news",
+                "activity_type": "link",
+                "url": "https://laravel-news.com",
+                "published_at": "2025-07-28",
+                "engagement_data": {
+                    "views": "248",
+                    "likes": 0,
+                    "shares": 0,
+                    "comments": 0
+                },
+                "status": "published",
+                "notes": "",
+                "id": "activity_68982bdc0b780",
+                "created_at": "2025-08-10T05:19:24.046985Z",
+                "updated_at": "2025-08-10T05:19:24.047057Z"
+            }
+        },
+        "last_updated": "2025-08-10T05:19:24.047129Z"
+    }
+}
