@@ -349,23 +349,28 @@ final class FlowBuilder
         return ConditionalStep::when($alwaysTrue, $combinedStep);
     }
 
-    private function resolveInitialPayload(string $payloadClass): mixed
+    private function resolveInitialPayload(string|array $payload): mixed
     {
+        // If already an array, return as-is (supports YAML associative arrays directly)
+        if (is_array($payload)) {
+            return $payload;
+        }
+
         // Try to decode as JSON first
-        if (str_starts_with($payloadClass, '{') || str_starts_with($payloadClass, '[')) {
-            $decoded = json_decode($payloadClass, true);
+        if (str_starts_with($payload, '{') || str_starts_with($payload, '[')) {
+            $decoded = json_decode($payload, true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 return $decoded;
             }
         }
 
         // Try to resolve as a class
-        if (class_exists($payloadClass)) {
-            return new $payloadClass();
+        if (class_exists($payload)) {
+            return new $payload();
         }
 
         // Handle simple values or return as string
-        return $payloadClass;
+        return $payload;
     }
 
     private function buildStepFromClass(string $stepClass): string
