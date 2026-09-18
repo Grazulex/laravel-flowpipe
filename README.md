@@ -186,8 +186,8 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 ## 💬 Support
 
 - 🐛 **[Report Issues](https://github.com/Grazulex/laravel-flowpipe/issues)**
-- � **[Discussions](https://github.com/Grazulex/laravel-flowpipe/discussions)**
-- � **[Documentation](https://github.com/Grazulex/laravel-flowpipe/wiki)**
+- 💬 **[Discussions](https://github.com/Grazulex/laravel-flowpipe/discussions)**
+- 📖 **[Documentation](https://github.com/Grazulex/laravel-flowpipe/wiki)**
 
 ---
 
