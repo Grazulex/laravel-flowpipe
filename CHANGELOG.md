@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.4.0] - 2026-10-08
+
+### Changed
+
+- **Minimum PHP version is now 8.4**: PHP 8.3 is no longer supported (#60)
+- CI test matrix now runs PHP 8.4 and 8.5 (#60)
+
 ## [v1.3.0] - 2026-09-17
 
 ### Added
@@ -26,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Flowpipe::send()` and `resolveInitialPayload()` now accept `string|array` payloads (#55).
 
-[Unreleased]: https://github.com/Grazulex/laravel-flowpipe/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/Grazulex/laravel-flowpipe/compare/v1.4.0...HEAD
+[v1.4.0]: https://github.com/Grazulex/laravel-flowpipe/compare/v1.3.0...v1.4.0
 [v1.3.0]: https://github.com/Grazulex/laravel-flowpipe/compare/v1.2.0...v1.3.0
 [v1.2.0]: https://github.com/Grazulex/laravel-flowpipe/compare/v1.1.0...v1.2.0
