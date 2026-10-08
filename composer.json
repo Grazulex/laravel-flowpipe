@@ -11,7 +11,7 @@
         "conditional",
         "traceable",
         "modular",
-        "php8.3",
+        "php8.4",
         "laravel12",
         "laravel13",
         "pest",
@@ -20,7 +20,7 @@
     "type": "library",
     "homepage": "https://github.com/grazulex/laravel-flowpipe",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "illuminate/support": "^12.19|^13.0",
         "nesbot/carbon": "^3.10",
         "illuminate/contracts": "^12.0|^13.0",
