@@ -17,7 +17,7 @@ final class FlowContext
     /** @var array<string, mixed> */
     private array $metadata = [];
 
-    private ?Tracer $tracer = null;
+    private ?Tracer $tracer;
 
     public function __construct(?Tracer $tracer = null)
     {

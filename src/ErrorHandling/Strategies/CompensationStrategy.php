@@ -41,7 +41,7 @@ final class CompensationStrategy implements ErrorHandlerStrategy
     public function handle(Throwable $error, mixed $payload, int $attemptNumber, array $context = []): ErrorHandlerResult
     {
         // Check if we should compensate
-        if ($this->shouldCompensate && ! ($this->shouldCompensate)($error, $attemptNumber)) {
+        if ($this->shouldCompensate instanceof Closure && ! ($this->shouldCompensate)($error, $attemptNumber)) {
             return ErrorHandlerResult::fail($error, $context);
         }
 

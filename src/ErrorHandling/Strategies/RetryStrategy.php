@@ -47,7 +47,7 @@ final class RetryStrategy implements ErrorHandlerStrategy
     public function handle(Throwable $error, mixed $payload, int $attemptNumber, array $context = []): ErrorHandlerResult
     {
         // Check if we should retry
-        if ($this->shouldRetry && ! ($this->shouldRetry)($error, $attemptNumber)) {
+        if ($this->shouldRetry instanceof Closure && ! ($this->shouldRetry)($error, $attemptNumber)) {
             return ErrorHandlerResult::fail($error, $context);
         }
 
