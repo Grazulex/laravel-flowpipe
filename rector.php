@@ -12,9 +12,7 @@ return RectorConfig::configure()
         deadCode: true,
         codeQuality: true,
         typeDeclarations: true,
-        privatization: true,
-        earlyReturn: true,
-        strictBooleans: true
+        privatization: true
     )
     ->withSkip([
         //

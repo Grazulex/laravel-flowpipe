@@ -34,7 +34,7 @@ final class RetryStep implements FlowStep
                 $attempts++;
 
                 // Check if we should retry this exception
-                if ($this->shouldRetry && ! ($this->shouldRetry)($e, $attempts)) {
+                if ($this->shouldRetry instanceof Closure && ! ($this->shouldRetry)($e, $attempts)) {
                     throw $e;
                 }
 

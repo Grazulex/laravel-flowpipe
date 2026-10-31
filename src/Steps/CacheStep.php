@@ -23,7 +23,7 @@ final class CacheStep implements FlowStep
 
     public function handle(mixed $payload, Closure $next): mixed
     {
-        $cache = $this->store !== null && $this->store !== '' && $this->store !== '0' ? Cache::store($this->store) : Cache::store();
+        $cache = ! in_array($this->store, [null, '', '0'], true) ? Cache::store($this->store) : Cache::store();
 
         $cacheKey = $this->generateCacheKey($payload);
 

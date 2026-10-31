@@ -52,7 +52,7 @@ final class FallbackStrategy implements ErrorHandlerStrategy
     public function handle(Throwable $error, mixed $payload, int $attemptNumber, array $context = []): ErrorHandlerResult
     {
         // Check if we should fallback
-        if ($this->shouldFallback && ! ($this->shouldFallback)($error, $attemptNumber)) {
+        if ($this->shouldFallback instanceof Closure && ! ($this->shouldFallback)($error, $attemptNumber)) {
             return ErrorHandlerResult::fail($error, $context);
         }
 
