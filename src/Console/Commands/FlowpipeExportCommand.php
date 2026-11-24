@@ -49,7 +49,6 @@ final class FlowpipeExportCommand extends Command
                 'json' => $this->exportToJson($definition),
                 'mermaid' => $this->exportToMermaid($definition, $flowName, $type),
                 'md' => $this->exportToMarkdown($definition, $flowName, $type),
-                default => throw new RuntimeException("Unsupported format: {$format}")
             };
 
             if ($outputPath) {
